@@ -1,4 +1,9 @@
-from flask import Flask, Response, send_file, request, make_response
+from flask import Flask
+from flask import Response
+from flask import render_template
+from flask import send_file
+from flask import request
+from flask import make_response
 import os
 from pymongo import MongoClient
 
@@ -22,11 +27,12 @@ def insert():
 @app.route('/')
 def home():
     print("Serving index.html", flush=True)
-    return send_file("../public/index.html")
+    return render_template('index.html')
 
-@app.route('/public/style.css')
-def css():
-    return send_file("../public/style.css")
+@app.route('/login')
+def login():
+    print("Redirecting to Login Page")
+    return render_template("login.html")
 
 
 if __name__ == '__main__':
