@@ -34,6 +34,13 @@ def login():
     print("Redirecting to Login Page")
     return render_template("login.html")
 
+@app.route('/login-request', methods = ['POST'])
+def loginRequest():
+    username = request.form["username"]
+    password = request.form["password"]
+    print("Logged In!", flush=True)
+    return render_template('index.html')
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

@@ -7,7 +7,7 @@
 }
 
 .login .overlap-wrapper {
-    background-color: rgba(255, 255, 255, 1);
+    background-color: #1385B6;
     overflow: hidden;
     background: linear-gradient(
         180deg,
@@ -27,7 +27,9 @@
     position: relative;
     width: 1454px;
     height: 1024px;
-    left: -7px;
+    left: 0px;
+    color: white;
+    font-family: "Lexend Deca-Regular", Helvetica;
 }
 
 .login .background {
