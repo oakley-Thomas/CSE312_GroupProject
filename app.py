@@ -41,6 +41,11 @@ def loginRequest():
     print("Logged In!", flush=True)
     return render_template('index.html')
 
+@app.route('/posts')
+def posts():
+    print("Redirecting to Posts Page")
+    return render_template("posts.html")
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
