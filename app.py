@@ -4,8 +4,9 @@ from flask import render_template
 from flask import send_file
 from flask import request
 from flask import make_response
-import os
+import os, bcrypt
 from pymongo import MongoClient
+
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -34,17 +35,30 @@ def login():
     print("Redirecting to Login Page")
     return render_template("login.html")
 
-@app.route('/login-request', methods = ['POST'])
-def loginRequest():
+@app.route('/registration')
+def registration():
+    print("Redirecting to Registration Page")
+    return render_template("registration.html")
+
+@app.route('/reg-request', methods = ['POST'])
+def regRequest():
     username = request.form["username"]
     password = request.form["password"]
-    print("Logged In!", flush=True)
-    return render_template('index.html')
+    passConf = request.form["password-confirm"]
 
-@app.route('/posts')
-def posts():
-    print("Redirecting to Posts Page")
-    return render_template("posts.html")
+    if password != passConf:
+        print("Error, Please Try again", flush=True)
+        return render_template('registration.html')
+    
+    # Get the passwords hash value
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    
+    registered_users.insert_one({
+        "username": username,
+        "password_hash": hashed_pw,
+    }) 
+
+    return render_template('login.html')
 
 
 if __name__ == '__main__':

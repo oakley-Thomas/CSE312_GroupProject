@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/globals.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+    <div class="bg">
+        <div class="overlap-wrapper">
+            <div class="overlap">
+                <div class="background">
+                    <img class="polygon" src="/static/img/polygon-1.svg" />
+                    <img class="polygon" src="/static/img/polygon-2.svg" />
+                    <div class="ellipse1"></div>
+                    <div class="ellipse2"></div>
+                </div>
+
+                <div class="title">
+                    <div class="overlap-group">
+                        <div class="text-wrapper">CSE312 Project</div>
+                        <img class="underline" src="/static/img/underline.svg" />
+                    </div>
+                </div>
+                    
+                <div class="reg"> 
+                    <div class="form-container"> 
+                    <form class="form" action="reg-request" method="post" enctype="application/x-www-form-urlencoded">
+                        <h1>Registration</h1>
+                        <hr class="hr">
+                    
+                        <label class="label" for="username"><b></b></label>
+                        <input class="input" type="text" placeholder="Username" name="username" id="username" required>
+                    
+                        <label class="label" for="password"><b></b></label>
+                        <input class="input" type="password" placeholder="Password" name="password" id="password" required>
+                    
+                        <label class="label" for="password-confirm"><b></b></label>
+                        <input class="input" type="password" placeholder="Confirm Password" name="password-confirm" id="password-confirm" required>
+                        <hr class="hr">
+                        
+                        <button type="submit" class="registerbtn">Continue</button>
+                    
+                      <div>
+                        <p>Already have an account? <a href="{{ url_for('login') }}">Login</a>.</p>
+                      </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
