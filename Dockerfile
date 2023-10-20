@@ -16,4 +16,4 @@ RUN chmod +x /wait
 COPY . .
 
 
-CMD /wait && python3 -u Backend/app.py
+CMD /wait && python3 -u app.py
