@@ -1,0 +1,20 @@
+.box {
+    position: fixed;
+    left: 45%;
+    top: 30%;
+    display: grid;
+    background-color: #1C2F4B;
+    width: 200px;
+    height: 100px;
+}
+.box-item {
+    left: 45%;
+    top: 30%;
+    display: inline-grid;
+    align-items: center;
+    padding: 8px 16px;
+}
+.text {
+    display: flex;
+    color: white;
+}
