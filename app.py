@@ -70,7 +70,7 @@ def store_posts():
         post["username"] = the_user["username"]
         post["likes"] = 0
         post["liked_by"] = []
-        posts_collection.insert_one(the_post)
+        posts_collection.insert_one(post)
     return redirect('/posts', 301)
 
 @app.route('/likepost', methods=['POST'])

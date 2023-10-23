@@ -4,10 +4,20 @@
 <head>
     <link rel="stylesheet" href="/static/css/globals.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/home.css" />
 </head>
-<body>
+<body onload=set_user()>
 <div class="login">
     <div class="overlap-wrapper">
+        <div class="box">
+                <div id="welcome_message" class="text"></div>
+            </div>
+        <form id="button1" class="box-item" action="/login" method="get" enctype="application/x-www-form-urlencoded">
+                    <button id="button1_text" type="submit">Login</button>
+        </form>
+        <form id="button2" class="box-item" action="/register" method="get" enctype="application/x-www-form-urlencoded">
+                    <button id="button2_text" type="submit">New User? Register Here</button>
+            </form>
         <div class="overlap">
             <div class="background">
                 <img class="polygon" src="/static/img/polygon-1.svg" />
@@ -15,7 +25,6 @@
                 <div class="ellipse"></div>
                 <div class="div"></div>
             </div>
-
             <div class="title">
                 <div class="overlap-group">
                     <div class="text-wrapper">CSE 312</div>
@@ -25,5 +34,6 @@
         </div>
     </div>
 </div>
+<script src="/static/js/home.js"></script>
 </body>
 </html>
