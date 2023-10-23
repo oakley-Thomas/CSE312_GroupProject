@@ -6,6 +6,8 @@ from flask import request
 from flask import make_response
 import os, bcrypt
 from pymongo import MongoClient
+import json
+from flask import redirect
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -14,10 +16,8 @@ app = Flask(__name__)
 client = MongoClient("mongodb://mongo:27017/")
 db = client["CSE312ProjectDB"]
 registered_users = db["users"]
+posts_collection = db["posts"]
 
-registered_users.insert_one({"id": 1, "username": "user1", "password": "1234"})   # test data
-
-# the route for below may be changed and more methods could be added once we implement the webpages and buttons, etc
 @app.route('/', methods=['POST'])
 def insert():
     data = request.json
@@ -45,6 +45,58 @@ def loginRequest():
 def posts():
     print("Redirecting to Posts Page")
     return render_template("posts.html")
+
+@app.route('/createPost', methods=['POST'])
+def store_posts():
+
+    post = request.get_json(force=True)
+
+    if request.cookies == None:
+        return
+    elif request.cookies.get("auth-token") == None:
+        return
+    else:
+        if len(posts_collection.find({})) == 0:
+            posts_collection.insert_one({"id_number": 1})
+            id = 1
+        else:
+            id_dict = client['db']['post_collection'].find({"id_number": {"$exists": "true"}})
+            id = id_dict['id_number'] + 1
+            posts_collection.update_one({"id_number": id - 1}, {"$set": {"id_number": id + 1}})
+        token = request.cookies.get("auth-token")
+        the_user = registered_users.find_one({"authtoken": token})
+
+        post["id"] = id
+        post["username"] = the_user["username"]
+        post["likes"] = 0
+        post["liked_by"] = []
+        posts_collection.insert_one(the_post)
+    return redirect('/posts', 301)
+
+@app.route('/likepost', methods=['POST'])
+def like_post():
+
+    post_id = request.path.split('/likepost/')[1]
+    token = request.cookies.get("auth-token")
+    the_user = registered_users.find_one({"authtoken": token})
+    the_post = posts_collection.find_one({"id": post_id})
+    current_likes = the_post["likes"]
+    current_liked_by_list = the_post["liked_by"]
+    if the_user["username"] in the_post["liked_by"]:
+        posts_collection.update_one({"id": post_id}, {"$set": {"likes": current_likes - 1}})
+        current_liked_by_list.remove(the_user["username"])
+        posts_collection.update_one({"id": post_id}, {"$set": {"liked_by": current_liked_by_list}})
+    else:
+        posts_collection.update_one({"id": post_id}, {"$set": {"likes": current_likes + 1}})
+        current_liked_by_list.append(the_user["username"])
+        posts_collection.update_one({"id": post_id}, {"$set": {"liked_by": current_liked_by_list}})
+
+    return
+
+@app.route('/post-history')
+def post_history():
+    all_posts = json.dumps(list(posts_collection.find({})), default=str)
+    return all_posts
 
 @app.route('/register')
 def registration():
@@ -75,5 +127,4 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(debug=True, host='0.0.0.0', port=port)
     print("Listening on port: " + str(port), flush=True)
-
 
