@@ -8,6 +8,7 @@ import os, bcrypt
 from pymongo import MongoClient
 import json
 from flask import redirect
+import html
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -50,6 +51,8 @@ def posts():
 def store_posts():
 
     post = request.get_json(force=True)
+    post["Title"] = html.escape(post["Title"])
+    post["Description"] = html.escape(post["Description"])
 
     if request.cookies == None:
         return
@@ -67,7 +70,7 @@ def store_posts():
         the_user = registered_users.find_one({"authtoken": token})
 
         post["id"] = id
-        post["username"] = the_user["username"]
+        post["username"] = html.escape(the_user["username"])
         post["likes"] = 0
         post["liked_by"] = []
         posts_collection.insert_one(the_post)
