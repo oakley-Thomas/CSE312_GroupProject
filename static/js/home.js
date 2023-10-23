@@ -1,7 +1,9 @@
-function set_user(){
+function check_for_token(){
         const str = document.cookie;
         const cookies = str.split(';');
         var username = "";
+        console.log("hello: ")
+        console.log(str)
         for (let idx = 0; idx < cookies.length; idx++){
             const c = cookies[idx].split("=");
             if(c[0] === "username"){
@@ -9,21 +11,15 @@ function set_user(){
             }
         }
         var element = document.getElementById("welcome_message");
-        if (username !== ""){
-            element.innerHTML += "Welcome Back, ";
-            element.innerHTML += "<br>";
-            element.innerHTML += username;
 
+        element.innerHTML += "Welcome Back, ";
+        element.innerHTML += "<br>";
+        element.innerHTML += username;
+
+        if (username !== ""){
             b1 = document.getElementById("button1");
             b1_text = document.getElementById("button1_text");
-            b1.action = "/posts";
-            b1_text.innerHTML = "Posts";
-
-            b2 = document.getElementById("button2")
-            b2_text = document.getElementById("button2_text");
-            b2.action = "/";
-            b2_text.innerHTML = "Logout";
-
-
+            b1.action = "/login";
+            b1_text.innerHTML = "Renew Session";
         }
     }

@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/static/css/style.css" />
     <link rel="stylesheet" href="/static/css/home.css" />
 </head>
-<body onload=set_user()>
+<body onload=check_for_token()>
 <div class="login">
     <div class="overlap-wrapper">
         <div class="box">
@@ -16,9 +16,9 @@
                     <button id="button1_text" type="submit">Login</button>
         </form>
         <form id="button2" class="box-item" action="/register" method="get" enctype="application/x-www-form-urlencoded">
-                    <button id="button2_text" type="submit">New User? Register Here</button>
+                    <button id="button2_text" type="submit">New User?Register Here</button>
         </form>
-        <form class="box-item" action="/posts" method="get" enctype"application/x-www-form-urlencoded">
+        <form class="box-item" action="/posts" method="get" enctype="application/x-www-form-urlencoded">
             <button type="submit">Posts</button>
         </form>
         <div class="overlap">
