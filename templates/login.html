@@ -15,10 +15,17 @@
                 <div class="ellipse"></div>
                 <div class="div"></div>
             </div>
-            <img class="login-form" src="/static/img/login-form.png" />
+            <form class="login-form" action="/login-request" method="post" enctype="application/x-www-form-urlencoded">
+                <h1>Login</h1>
+                <label class="login-form-label" for="username">Username:</label><br>
+                <input type="text" id="username" name="username"><br>
+                <label class="login-form-label" for="password">Password:</label><br>
+                <input type="text" id="password" name="password"><br>
+                <input type="submit" value="Continue">
+            </form>
             <div class="title">
                 <div class="overlap-group">
-                    <div class="text-wrapper">App Name</div>
+                    <div class="text-wrapper">CSE 312</div>
                     <img class="underline" src="/static/img/underline.svg" />
                 </div>
             </div>
