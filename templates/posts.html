@@ -12,43 +12,26 @@
     </div>
     <div class="postHistorySeparator"></div>
 
-    <form id="postForm">
+    <div id="postForm">
         <div class="postInput">
             <input class="inputTitle" type="text" name="Title" id="Title" placeholder="Title: "><br>
             <div class="formLine"></div>
             <textarea class="inputDesc" type="text" name="Description" id="Description" placeholder="Description: " ></textarea>
         </div>
         <input class="sendButton" type="submit" value="Send" onclick="postData()">
-    </form>
+    </div>
     <button class="backButton" onclick="back()" >Back</button>
     <button class="logoutButton" onclick="logout()">Log Out</button>
 <script src="/static/js/posts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    function postData() {
-    var title = document.getElementById('Title').value;
-    var description = document.getElementById('Description').value;
-
-    var data = {
-        Title: title,
-        Description: description
-    };
-    console.log("sending POST");
-
-    fetch('/createPost', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);
-    })
-    .catch(error => {
-        console.log(error);
-    });
-
+function postData() {
+    const title = document.getElementById("Title").value;
+    const description = document.getElementById("Description").value;
+    const post = { title: title, description: description };
+    axios.post('/createPost', post)
+        .then(response => console.log(response.data))
+        .catch(error => console.error(error));
 }
 </script>
 </body>
