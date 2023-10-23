@@ -17,8 +17,8 @@ function addPost(messageJSON) {
 function postHTML(messageJSON) {
     const postTitle = messageJSON.title;
     const postDescription = messageJSON.description;
-    const postLikeCount = messageJSON.likeCount;
-    const postSender = messageJSON.sender;
+    const postLikeCount = messageJSON.likes;
+    const postSender = messageJSON.username;
     const postId = messageJSON.id;
     let postHTML = "<div class='post ratingSelected' id='" + postId + "'>";
     postHTML += "<div class='postSender'>" + postSender + ": </div>";
