@@ -19,28 +19,49 @@ db = client["CSE312ProjectDB"]
 registered_users = db["users"]
 posts_collection = db["posts"]
 
+
 @app.route('/', methods=['POST'])
 def insert():
     data = request.json
     registered_users.insert_one(data)
     return
 
+def hash_function(stringToHash):
+    return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
+
+
+def verify_password(password, hash):
+    return bcrypt.checkpw(password.encode('utf-8'), hash)
+
 @app.route('/')
 def home():
     print("Serving index.html", flush=True)
     return render_template('index.html')
+
 
 @app.route('/login')
 def login():
     print("Redirecting to Login Page")
     return render_template("login.html")
 
-@app.route('/login-request', methods = ['POST'])
+
+@app.route('/login-request', methods=['POST'])
 def loginRequest():
     username = request.form["username"]
     password = request.form["password"]
-    print("Logged In!", flush=True)
-    return render_template('index.html')
+
+    if username and password:
+        user_data = registered_users.find_one({'username': username})
+        if user_data and verify_password(password, user_data['password_hash']):
+            authtoken = hash_function(user_data['username'])
+            registered_users.update_one({'username': username}, {'$set': {'auth-token': authtoken}})
+            response = make_response(redirect('/'))
+            response.set_cookie('auth-token', authtoken, httponly=True, max_age=3600)
+            return response
+
+
+    print("Authentication failed", flush=True)
+    return render_template('login.html')
 
 @app.route('/posts')
 def posts():
@@ -115,14 +136,14 @@ def regRequest():
     if password != passConf:
         print("Error, Please Try again", flush=True)
         return render_template('register.html')
-    
+
     # Get the passwords hash value
     hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    
+
     registered_users.insert_one({
         "username": username,
         "password_hash": hashed_pw,
-    }) 
+    })
 
     return render_template('login.html')
 
