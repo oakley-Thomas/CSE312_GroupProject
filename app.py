@@ -36,7 +36,6 @@ def verify_password(password, hash):
 @app.route('/')
 def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
-        print("HELLO", flush=True)
         token = request.cookies.get("auth-token")
         user = db["users"].find_one({"auth-token": token.encode()})
         response = make_response(render_template('index.html'))
