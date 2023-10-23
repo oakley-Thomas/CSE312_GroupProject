@@ -40,18 +40,12 @@ def home():
         token = request.cookies.get("auth-token")
         user = db["users"].find_one({"auth-token": token.encode()})
         response = make_response(render_template('index.html'))
-        me = db["users"].find_one({"username": "user4002"})
-        metoken = me["auth-token"]
-        print("metoken" + str(metoken))
-        print("your token" + str(token))
         if user is None:
             response.set_cookie('username', "inv-token")
         if user is not None:
             nametest = user["username"]
             response.set_cookie('username', nametest)
         return response
-    print("HELLO OUTSIDE", flush=True)
-    #print("Serving index.html", flush=True)
     return render_template('index.html')
 @app.route('/login')
 def login():

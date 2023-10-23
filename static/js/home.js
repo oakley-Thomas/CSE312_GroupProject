@@ -2,8 +2,6 @@ function check_for_token(){
         const str = document.cookie;
         const cookies = str.split(';');
         var username = "";
-        console.log("hello: ")
-        console.log(str)
         for (let idx = 0; idx < cookies.length; idx++){
             const c = cookies[idx].split("=");
             if(c[0] === "username"){
