@@ -35,10 +35,17 @@ def verify_password(password, hash):
 
 @app.route('/')
 def home():
-    print("Serving index.html", flush=True)
+    if request.cookies != None and request.cookies.get("auth-token") != None:
+        token = request.cookies.get("auth-token")
+        user = db["users"].find_one({"auth-token": token.encode()})
+        response = make_response(render_template('index.html'))
+        if user is None:
+            response.set_cookie('username', "inv-token")
+        if user is not None:
+            nametest = user["username"]
+            response.set_cookie('username', nametest)
+        return response
     return render_template('index.html')
-
-
 @app.route('/login')
 def login():
     print("Redirecting to Login Page")
@@ -94,7 +101,7 @@ def store_posts():
         post["username"] = html.escape(the_user["username"])
         post["likes"] = 0
         post["liked_by"] = []
-        posts_collection.insert_one(the_post)
+        posts_collection.insert_one(post)
     return redirect('/posts', 301)
 
 @app.route('/likepost', methods=['POST'])
