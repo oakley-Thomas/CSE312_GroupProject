@@ -20,12 +20,16 @@ function postHTML(messageJSON) {
     const postLikeCount = messageJSON.likes;
     const postSender = messageJSON.username;
     const postId = messageJSON.id;
+    const image = messageJSON.image;
     let postHTML = "<div class='post ratingSelected' id='" + postId + "'>";
     postHTML += "<div class='postSender'>" + postSender + ": </div>";
     postHTML += "<div class='postTemplate'>";
     postHTML += "<div class='postTitle'>" + postTitle + "</div>";
     postHTML += "<div class='postLine'></div>";
     postHTML += "<div class='postDescription'>" + postDescription + "</div>";
+    if (image) {
+        postHTML += "<img src='" + image + "' class='postImage'>";
+    }
     postHTML += "</div>";
     postHTML += "<div class='ratingLocation'>";
     postHTML += "<div class='rating'>";
