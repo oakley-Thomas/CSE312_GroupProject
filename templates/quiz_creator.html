@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/posts.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Posts</title>
+</head>
+<body onload="onLoadRun();">
+<div class="postHistory" id="postHistory">
+</div>
+<div class="postHistorySeparator"></div>
+
+<div id="postForm">
+    <div class="postInput">
+        <input class="inputTitle" type="text" name="Title" id="Title" placeholder="Title: "><br>
+        <div class="formLine"></div>
+        <textarea class="inputDesc" type="text" name="Description" id="Description" placeholder="Description: " ></textarea>
+        <div class="multipleChoiceOptions">
+
+            <input type="radio" id="option1" name="user-answer" value="option1">
+            <label for="option1">
+                <input class="user-entered-answer" type="text" name="option1-text" id="option1-text" placeholder="Enter answer here">
+            </label><br>
+
+            <input type="radio" id="option2" name="user-answer" value="option2">
+            <label for="option2">
+                <input class="user-entered-answer" type="text" name="option2-text" id="option2-text" placeholder="Enter answer here">
+            </label><br>
+
+            <input type="radio" id="option3" name="user-answer" value="option3">
+            <label for="option3">
+                <input class="user-entered-answer" type="text" name="option3-text" id="option3-text" placeholder="Enter answer here">
+            </label><br>
+        </div>
+    </div>
+    <input class="sendButton" type="submit" value="Send" onclick="postData()">
+</div>
+<button class="backButton" onclick="back()" >Back</button>
+<button class="logoutButton" onclick="logout()">Log Out</button>
+<script src="/static/js/posts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src ="/static/js/quiz_creator.js"></script>
+</body>
+</html>

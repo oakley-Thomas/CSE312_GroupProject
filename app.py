@@ -75,6 +75,24 @@ def posts():
     print("Redirecting to Posts Page")
     return render_template("posts.html")
 
+@app.route('/create-quiz')
+def load_quiz_creator():
+    print("Creating Quiz!")
+    return render_template("quiz_creator.html")
+
+@app.route('/submit-quiz', methods=['POST'])
+def submit_quiz():
+    post = request.get_json(force=True)
+    post["correct"] = html.escape(post["title"])
+    print("-----------------------", flush=True)
+    print(post["correct"], flush=True)
+    print("-----------------------", flush=True)
+    """post["Description"] = html.escape(post["Description"])
+    post["Correct"] = html.escape(post["Correct"])
+    print(post["Correct"])
+    print("------------------")"""
+    return render_template("quiz_creator.html")
+
 @app.route('/createPost', methods=['POST'])
 def store_posts():
 
