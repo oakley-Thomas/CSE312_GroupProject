@@ -85,7 +85,7 @@ def load_quiz_creator():
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
     post = request.get_json(force=True)
-    post["correct"] = html.escape(post["title"])
+    post["correct"] = html.escape(post["correct"])
     print("-----------------------", flush=True)
     print(post["correct"], flush=True)
     print("-----------------------", flush=True)

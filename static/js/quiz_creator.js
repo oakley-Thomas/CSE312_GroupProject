@@ -2,7 +2,7 @@ function postData() {
     const title = document.getElementById("Title").value;
     const description = document.getElementById("Description").value;
     const userAnswers = document.getElementsByName("user-answer");
-    var correct = "";
+    var correct = "TEST";
     for (var i = 0; i < userAnswers.length; i++) {
         if (userAnswers[i].checked){
             console.log("Correct Answer: " + userAnswers[i].value)
