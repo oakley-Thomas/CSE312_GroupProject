@@ -9,6 +9,7 @@ from pymongo import MongoClient
 import json
 from flask import redirect
 import html
+import hashlib
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -20,11 +21,11 @@ registered_users = db["users"]
 posts_collection = db["posts"]
 
 
-@app.route('/', methods=['POST'])
-def insert():
-    data = request.json
-    registered_users.insert_one(data)
-    return
+# @app.route('/', methods=['POST'])
+# def insert():
+#     data = request.json
+#     registered_users.insert_one(data)
+#     return
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
@@ -37,7 +38,7 @@ def verify_password(password, hash):
 def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
         token = request.cookies.get("auth-token")
-        user = db["users"].find_one({"auth-token": token.encode()})
+        user = db["users"].find_one({"auth-token": token})
         response = make_response(render_template('index.html'))
         if user is None:
             response.set_cookie('username', "inv-token")
@@ -60,7 +61,8 @@ def loginRequest():
     if username and password:
         user_data = registered_users.find_one({'username': username})
         if user_data and verify_password(password, user_data['password_hash']):
-            authtoken = hash_function(user_data['username'])
+            # authtoken = hash_function(user_data['username'])
+            authtoken = hashlib.sha256(user_data['username'].encode()).hexdigest()
             registered_users.update_one({'username': username}, {'$set': {'auth-token': authtoken}})
             response = make_response(redirect('/'))
             response.set_cookie('auth-token', authtoken, httponly=True, max_age=3600)
@@ -97,23 +99,23 @@ def submit_quiz():
 def store_posts():
 
     post = request.get_json(force=True)
-    post["Title"] = html.escape(post["Title"])
-    post["Description"] = html.escape(post["Description"])
+    post["title"] = html.escape(post["title"])
+    post["description"] = html.escape(post["description"])
 
     if request.cookies == None:
         return
     elif request.cookies.get("auth-token") == None:
         return
     else:
-        if len(posts_collection.find({})) == 0:
+        if list((posts_collection.find({}))) == []:
             posts_collection.insert_one({"id_number": 1})
             id = 1
         else:
-            id_dict = client['db']['post_collection'].find({"id_number": {"$exists": "true"}})
-            id = id_dict['id_number'] + 1
+            id_dict = json.loads(json.dumps(list(posts_collection.find({"id_number": {"$exists": "true"}})), default=str))
+            id = id_dict[0]["id_number"] + 1
             posts_collection.update_one({"id_number": id - 1}, {"$set": {"id_number": id + 1}})
         token = request.cookies.get("auth-token")
-        the_user = registered_users.find_one({"authtoken": token})
+        the_user = registered_users.find_one({"auth-token": token})
 
         post["id"] = id
         post["username"] = html.escape(the_user["username"])
@@ -122,12 +124,12 @@ def store_posts():
         posts_collection.insert_one(post)
     return redirect('/posts', 301)
 
-@app.route('/likepost', methods=['POST'])
-def like_post():
+@app.route('/likepost/<id>', methods=['POST'])
+def like_post(id):
 
-    post_id = request.path.split('/likepost/')[1]
+    post_id = int(id)
     token = request.cookies.get("auth-token")
-    the_user = registered_users.find_one({"authtoken": token})
+    the_user = registered_users.find_one({"auth-token": token})
     the_post = posts_collection.find_one({"id": post_id})
     current_likes = the_post["likes"]
     current_liked_by_list = the_post["liked_by"]
@@ -140,11 +142,11 @@ def like_post():
         current_liked_by_list.append(the_user["username"])
         posts_collection.update_one({"id": post_id}, {"$set": {"liked_by": current_liked_by_list}})
 
-    return
+    return redirect('/posts', 301)
 
 @app.route('/post-history')
 def post_history():
-    all_posts = json.dumps(list(posts_collection.find({})), default=str)
+    all_posts = json.dumps(list(posts_collection.find({"title": {"$exists": "true"}})), default=str)
     return all_posts
 
 @app.route('/register')
