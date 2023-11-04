@@ -92,7 +92,7 @@ def submit_quiz():
     #if request.cookies.get("auth-token") == None:
      #   return
     post = request.get_json(force=True)
-    # Get username and create database: Username -> Question -> Title, Description, Answers, Correct
+    # Get username and create database: Title -> Title, Choices(json), Correct ("option1", "option2"...)
     post["title"] = html.escape(post["title"])
     # TODO: Ask ChatGPT if its a valid question?
     # TODO: Escape each input answer HTML
