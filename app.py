@@ -109,6 +109,17 @@ def submit_quiz():
     quiz_collection.insert_one({post["title"]: jsonQuiz})
     return render_template("quiz_creator.html")
 
+@app.route('/userGrades')
+def user_grades():
+    token = request.cookies.get("auth-token")
+    user = db["users"].find_one({"auth-token": token})
+
+    if user is None:
+        return render_template('login.html')
+    else:
+        #TODO: finish this later
+
+
 @app.route('/createPost', methods=['POST'])
 def store_posts():
 
