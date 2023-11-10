@@ -78,9 +78,9 @@ def posts():
     print("Redirecting to Posts Page")
     return render_template("posts.html")
 
-@app.route('/create-quiz')
+@app.route('/quizzes')
 def load_quiz_creator():
-    return render_template("quiz_creator.html")
+    return render_template("quizzes.html")
 
 @app.route('/quiz-history')
 def quiz_history():
@@ -107,7 +107,7 @@ def submit_quiz():
     jsonQuiz = json.dumps(quiz)
     # For now the uid for the post is just the title.... this probably means no duplicate questions
     quiz_collection.insert_one({post["title"]: jsonQuiz})
-    return render_template("quiz_creator.html")
+    return render_template("quizzes.html")
 
 @app.route('/createPost', methods=['POST'])
 def store_posts():

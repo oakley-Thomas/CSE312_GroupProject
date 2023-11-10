@@ -26,12 +26,68 @@ function postData() {
     if (correct != "NONE"){
         const post = { title: title, correct: correct, choices: choices };
         axios.post('/submit-quiz', post)
-                .then(response => console.log(response.data))
+                .then(response => confirmSubmission())
                 .catch(error => console.error(error));
     }
     else{
         alert("Please select the correct answer");
     }
+}
+
+function showQuizCreator()
+{
+    // Set the HTML
+    document.getElementById("postInput").innerHTML = 
+    `
+    <input class="inputTitle" type="text" name="Title" id="Title" placeholder="Title: "><br>
+    <div class="formLine"></div>
+    <div class="multipleChoiceOptions">
+        <!-- Choice 1 -->
+        <input type="radio" id="option1" name="user-answer" value="option1">
+        <label for="option1">
+            <input class="user-entered-answer" type="text" name="option1-text" id="option1-text" placeholder="Enter answer here">
+        </label><br>
+        <!-- Choice 2 -->
+        <input type="radio" id="option2" name="user-answer" value="option2">
+        <label for="option2">
+            <input class="user-entered-answer" type="text" name="option2-text" id="option2-text" placeholder="Enter answer here">
+        </label><br>
+        <!-- Choice 3 -->
+        <input type="radio" id="option3" name="user-answer" value="option3">
+        <label for="option3">
+            <input class="user-entered-answer" type="text" name="option3-text" id="option3-text" placeholder="Enter answer here">
+        </label><br>
+    </div>`;
+    // Change the button text and onclick functionality
+    document.getElementById("sendButton").value = "Submit";
+    document.getElementById("sendButton").onclick = function() { postData() }
+    // Change back button onclick
+    document.getElementById("backButton").onclick = function() { hideQuizCreator() }
 
 }
 
+function hideQuizCreator(inResponse)
+{
+    document.getElementById("postInput").innerHTML = '<h1>Welcome!</h1>'
+    // Send button
+    document.getElementById("sendButton").value = "Create Quiz!";
+    document.getElementById("sendButton").onclick = function() { showQuizCreator() }
+
+    document.getElementById("backButton").onclick = function() { returnHome() }
+}
+
+function returnHome() {
+    location.replace("/");
+}
+
+function logout() {
+    const token = localStorage.getItem("authtoken");
+    localStorage.removeItem("authtoken");
+    location.replace("/login");
+}
+
+function confirmSubmission()
+{
+    document.getElementById("postInput").innerHTML = '<h1>Submitted!</h1>'
+    setTimeout(function() { hideQuizCreator() }, 2500);
+}
