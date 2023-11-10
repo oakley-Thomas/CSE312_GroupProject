@@ -21,10 +21,14 @@ function postData() {
             correct = userAnswers[i].value
         }
     }
+
+    // Extract the duration
+    const duration = document.getElementById("quizDuration").value;
+
     JSON.stringify(choices);
 
     if (correct != "NONE"){
-        const post = { title: title, correct: correct, choices: choices };
+        const post = { title: title, correct: correct, choices: choices, duration: duration};
         axios.post('/submit-quiz', post)
                 .then(response => confirmSubmission())
                 .catch(error => console.error(error));
@@ -57,6 +61,17 @@ function showQuizCreator()
         <label for="option3">
             <input class="user-entered-answer" type="text" name="option3-text" id="option3-text" placeholder="Enter answer here">
         </label><br>
+        <br>
+        <br>
+        <div class="timer">
+            <label for="duration">Duration:</label>
+            <select name="duration" id="quizDuration">
+                <option value="1">1 Hour</option>
+                <option value="6">6 Hours</option>
+                <option value="12">12 Hours</option>
+                <option value="24">24 Hours</option>
+            </select>
+        </div>
     </div>`;
     // Change the button text and onclick functionality
     document.getElementById("sendButton").value = "Submit";

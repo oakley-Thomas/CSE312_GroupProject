@@ -97,12 +97,18 @@ def submit_quiz():
     # TODO: Ask ChatGPT if its a valid question?
     # TODO: Escape each input answer HTML
     post["correct"] = html.escape(post["correct"])
-
+    
+    # Make sure a valid duration is given (default to 1 hour)
+    if (int(post["duration"]) > 24 or int(post["duration"]) < 1):
+        post["duration"] = 1
+    
+    print("Duration: " + post["duration"], flush=True)
     #---- Database ---
     quiz = {
         "title": post["title"],
         "choices": post["choices"],
-        "answer": post["correct"]
+        "answer": post["correct"],
+        "duration": post["duration"]
     }
     jsonQuiz = json.dumps(quiz)
     # For now the uid for the post is just the title.... this probably means no duplicate questions
