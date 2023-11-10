@@ -14,10 +14,7 @@ function postData() {
         choiceName = choice + "-text";
         choiceValue = document.getElementById(choiceName).value;
         choices[choice] = choiceValue;
-
-        console.log(choice + ": " + choiceValue)
         if (userAnswers[i].checked){
-            console.log("Correct Answer: " + userAnswers[i].value)
             correct = userAnswers[i].value
         }
     }
@@ -36,6 +33,7 @@ function postData() {
     else{
         alert("Please select the correct answer");
     }
+    updatePostHistory();
 }
 
 function showQuizCreator()
@@ -43,6 +41,7 @@ function showQuizCreator()
     // Set the HTML
     document.getElementById("postInput").innerHTML = 
     `
+    <form id="myForm">
     <input class="inputTitle" type="text" name="Title" id="Title" placeholder="Title: "><br>
     <div class="formLine"></div>
     <div class="multipleChoiceOptions">
@@ -64,7 +63,7 @@ function showQuizCreator()
         <br>
         <br>
         <div class="timer">
-            <label for="duration">Duration:</label>
+            <label for="quizDuration">Duration:</label>
             <select name="duration" id="quizDuration">
                 <option value="1">1 Hour</option>
                 <option value="6">6 Hours</option>
@@ -72,7 +71,8 @@ function showQuizCreator()
                 <option value="24">24 Hours</option>
             </select>
         </div>
-    </div>`;
+    </div>
+    </form>`;
     // Change the button text and onclick functionality
     document.getElementById("sendButton").value = "Submit";
     document.getElementById("sendButton").onclick = function() { postData() }
@@ -93,12 +93,6 @@ function hideQuizCreator(inResponse)
 
 function returnHome() {
     location.replace("/");
-}
-
-function logout() {
-    const token = localStorage.getItem("authtoken");
-    localStorage.removeItem("authtoken");
-    location.replace("/login");
 }
 
 function confirmSubmission()
