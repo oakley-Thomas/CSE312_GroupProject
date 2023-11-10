@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/posts.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Posts</title>
+</head>
+<body onload="onLoadRun();">
+<div class="postHistory" id="postHistory">
+</div>
+<div class="postHistorySeparator"></div>
+
+<div id="postForm">
+    <div class="postInput" id="postInput">
+        <h1>Welcome!</h1>
+    </div>
+    <input class="sendButton" id="sendButton" type="submit" value="Create Quiz!" onclick="showQuizCreator()">
+</div>
+<button class="backButton" id="backButton" onclick="returnHome()" >Back</button>
+<button class="logoutButton" onclick="logout()">Log Out</button>
+<script src="/static/js/quizzes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src ="/static/js/quiz_creator.js"></script>
+</body>
+</html>
