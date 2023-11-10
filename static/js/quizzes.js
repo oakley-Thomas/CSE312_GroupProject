@@ -1,13 +1,9 @@
-function back() {
-    location.replace("/");
-}
-
-function clearPostHistory() {
+function clearQuizHistory() {
     const postHistory = document.getElementById("postHistory");
     postHistory.innerHTML = "";
 }
 
-function addPost(messageJSON) {
+function addQuiz(messageJSON) {
     const postHistory = document.getElementById("postHistory");
     postHistory.innerHTML += postHTML(messageJSON);
     postHistory.scrollIntoView(false);
@@ -15,43 +11,38 @@ function addPost(messageJSON) {
 }
 
 function postHTML(messageJSON) {
-    const postTitle = messageJSON.title;
-    const postDescription = messageJSON.description;
-    const postLikeCount = messageJSON.likes;
-    const postSender = messageJSON.username;
-    const postId = messageJSON.id;
-    const image = messageJSON.image;
-    let postHTML = "<div class='post ratingSelected' id='" + postId + "'>";
-    postHTML += "<div class='postSender'>" + postSender + ": </div>";
-    postHTML += "<div class='postTemplate'>";
-    postHTML += "<div class='postTitle'>" + postTitle + "</div>";
-    postHTML += "<div class='postLine'></div>";
-    postHTML += "<div class='postDescription'>" + postDescription + "</div>";
-    postHTML += "</div>";
+    const quizTitle = messageJSON.title;
+    const timeRemaining = messageJSON.duration
+    let postHTML = "<form id='" + quizTitle + "'>"
+    postHTML += "<h2 class='postTitle'>" + quizTitle + "</h2>";
+    postHTML += "<p> Time Remaining: " + timeRemaining + "</p>";
+    for (const [optionLabel, optionValue] of Object.entries(messageJSON.choices))
+    {
+        postHTML += "<input type='radio' id='" + optionLabel + "' name='user-answer' value='" + optionValue + "'></input>"
+        postHTML += "<label for='" + optionLabel + "'>" + optionValue + "</label><br></br>"
+    }
     if (image) {
         postHTML += "<img src='" + image + "' class='postImage'>";
     }
-    postHTML += "<div class='ratingLocation'>";
-    postHTML += "<div class='rating'>";
-    postHTML += "<button onclick='likePost(" + postId + ")' class='ratingButton material-icons'>thumb_up</button>";
-    postHTML += "<span class='ratingCount'>" + postLikeCount + "</span>";
-    postHTML += "</div>";
-    postHTML += "</div>";
-    postHTML += "</div>";
+    postHTML += "<input type='button' value='Answer' onclick='answerQuiz(this.form)'>"
+    postHTML += "</form>"
+    postHTML += "<div class='postLine'></div>";
     return postHTML;
 }
 
 // TODO: Convert this to answerQuiz
-function likePost(postId) {
-    const request = new XMLHttpRequest();
-    request.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            console.log(this.response);
-        }
+function answerQuiz(form) {
+    var selectedRadioButton = form.querySelector("input[name='user-answer']:checked");
+    var quizID = form.id
+    if (selectedRadioButton){
+        const post = { id: quizID, answer: selectedRadioButton.id};
+        axios.post('/answer-quiz', post)
+            .then(response => confirmSubmission())
+            .catch(error => console.error(error));
     }
-    // TODO: endpoint /answer/postID
-    request.open("POST", "/likepost/" + postId);
-    request.send();
+    else{
+        alert("Please choose an answer to submit.");
+    }
 }
 
 function logout() {
@@ -64,10 +55,14 @@ function updatePostHistory() {
     const request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
-            clearPostHistory();
+            clearQuizHistory();
             const messages = JSON.parse(this.response);
             for (const message of messages) {
-                addPost(message);
+                for (const [key, value] of Object.entries(message))
+                {
+                    addQuiz(JSON.parse(value));
+                }
+                
             }
         }
     }
@@ -77,5 +72,5 @@ function updatePostHistory() {
 
 function onLoadRun() {
     updatePostHistory();
-    setInterval(updatePostHistory, 2000);
+    setInterval(updatePostHistory, 5000);
 }
