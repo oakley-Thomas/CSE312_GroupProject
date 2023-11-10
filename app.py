@@ -78,14 +78,22 @@ def posts():
     print("Redirecting to Posts Page")
     return render_template("posts.html")
 
-@app.route('/create-quiz')
+@app.route('/quizzes')
 def load_quiz_creator():
-    return render_template("quiz_creator.html")
+    return render_template("quizzes.html")
 
 @app.route('/quiz-history')
 def quiz_history():
-    all_quizzes = json.dumps(list(quiz_collection.find({"title": {"$exists": "true"}})), default=str)
-    return all_quizzes
+    all_posts = list(quiz_collection.find({},{"_id": 0}))
+    return all_posts
+
+#TODO this needs to be deleted before pushing to production... clears quiz database
+@app.route('/clear')
+def clear_quizzes():
+    quiz_collection.delete_many({})
+    print("Cleared DB", flush=True)
+    jsonResponse = json.dumps("Cleared Database")
+    return jsonResponse
 
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
@@ -98,16 +106,32 @@ def submit_quiz():
     # TODO: Escape each input answer HTML
     post["correct"] = html.escape(post["correct"])
 
+    # Make sure a valid duration is given (default to 1 hour)
+    if (int(post["duration"]) > 24 or int(post["duration"]) < 1):
+        post["duration"] = 1
+    
+    print("Duration: " + post["duration"], flush=True)
     #---- Database ---
     quiz = {
         "title": post["title"],
         "choices": post["choices"],
-        "answer": post["correct"]
+        "answer": post["correct"],
+        "duration": post["duration"]
     }
     jsonQuiz = json.dumps(quiz)
     # For now the uid for the post is just the title.... this probably means no duplicate questions
     quiz_collection.insert_one({post["title"]: jsonQuiz})
-    return render_template("quiz_creator.html")
+
+    jsonResponse = json.dumps("OK")
+    return jsonResponse
+
+@app.route('/answer-quiz', methods=['POST'])
+def answer_quiz():
+    post = request.get_json(force=True)
+    print("Post ID: " + post["id"], flush=True)
+    print("Selected Answer: " + post["answer"], flush=True)
+    jsonResponse = json.dumps("OK")
+    return jsonResponse
 
 @app.route('/userGrades')
 def user_grades():
