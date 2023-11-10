@@ -21,6 +21,9 @@ function postHTML(messageJSON) {
         postHTML += "<input type='radio' id='" + optionLabel + "' name='user-answer' value='" + optionValue + "'></input>"
         postHTML += "<label for='" + optionLabel + "'>" + optionValue + "</label><br></br>"
     }
+    if (image) {
+        postHTML += "<img src='" + image + "' class='postImage'>";
+    }
     postHTML += "<input type='button' value='Answer' onclick='answerQuiz(this.form)'>"
     postHTML += "</form>"
     postHTML += "<div class='postLine'></div>";
