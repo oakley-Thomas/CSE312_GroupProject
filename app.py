@@ -3,9 +3,11 @@ from flask import Response
 from flask import render_template
 from flask import send_file
 from flask import request
+from flask import send_from_directory
 from flask import make_response
 from flask_socketio import SocketIO, emit
 from threading import Thread
+from flask import session
 import os, bcrypt
 from pymongo import MongoClient
 import json
@@ -24,6 +26,7 @@ db = client["CSE312ProjectDB"]
 registered_users = db["users"]
 posts_collection = db["posts"]
 quiz_collection = db["quizzes"]
+timers = {}
 
 
 # @app.route('/', methods=['POST'])
@@ -39,14 +42,16 @@ def hash_function(stringToHash):
 def verify_password(password, hash):
     return bcrypt.checkpw(password.encode('utf-8'), hash)
 
-def countdown_timer(duration, room):
+def countdown_timer(url, duration):
     while duration:
         hours, remainder = divmod(duration, 3600)
         mins, secs = divmod(remainder, 60)
-        timeformat = '{:02d}:{:02d}:{:02d}'.format(hours, mins, secs)
-        socketio.emit('timer', {'data': timeformat}, room=room)
+        timer = '{:02d}:{:02d}:{:02d}'.format(hours, mins, secs)
+        print(timer, end="\r")
         time.sleep(1)
         duration -= 1
+        timers[url] = timer  # Update the timer for this quiz
+        socketio.emit('timer', {'url': url, 'data': timer})
 
 @app.route('/')
 def home():
@@ -62,20 +67,32 @@ def home():
         return response
     return render_template('index.html')
 
+@socketio.on('connect')
+def handle_connect():
+    url = request.args.get('url')
+    if url is not None:
+        session['url'] = url
+    print(f"Client connected with url {url}")
+
 @app.route('/start-quiz', methods=['POST'])
 def start_quiz():
-    # Get the duration from the request body
+    # Get the URL and duration from the request body
+    url = request.json.get('url')
     duration_in_hours = request.json.get('duration')
-    if duration_in_hours is None:
-        return "Duration not provided", 400
+    if url is None or duration_in_hours is None:
+        return "URL or duration not provided", 400
 
     # Convert the duration to seconds
     duration_in_seconds = int(duration_in_hours) * 60 * 60
 
-    # Start the quiz and the timer
-    thread = Thread(target=countdown_timer, args=(duration_in_seconds, request.sid))
+    # Start the timer for this quiz
+    thread = Thread(target=countdown_timer, args=(url, duration_in_seconds))
     thread.start()
     return "Quiz started", 200
+
+@app.route('/test')
+def test_page():
+    return send_from_directory('templates', 'test.html')
 
 @app.route('/login')
 def login():
@@ -254,6 +271,6 @@ def regRequest():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    socketio.run(app, debug=True, host='0.0.0.0', port=port)
     print("Listening on port: " + str(port), flush=True)
 
