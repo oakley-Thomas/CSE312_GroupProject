@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Timer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Quiz Timer</h1>
+    <p id="timer">00:00:00</p>
+    <button id="start-quiz">Start Quiz</button>
+    <script>
+        var socket = io.connect('http://localhost:8080', { 
+            transports: ['websocket'],
+            query: { url: window.location.href }  // Send the URL of the page
+        });
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+        });
+        socket.on('timer', function(data) {
+            if (data.url === window.location.href) {  // Update the timer only if the URL matches
+                document.getElementById('timer').innerHTML = data.data;
+            }
+        });
+
+        $('#start-quiz').click(function() {
+            $.ajax({
+                url: 'http://localhost:8080/start-quiz',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ url: window.location.href, duration: 24 }),  // Send the URL of the page
+                success: function() {
+                    console.log('Quiz started');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
