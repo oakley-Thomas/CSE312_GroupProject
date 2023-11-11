@@ -4,16 +4,20 @@ from flask import render_template
 from flask import send_file
 from flask import request
 from flask import make_response
+from flask_socketio import SocketIO, emit
+from threading import Thread
 import os, bcrypt
 from pymongo import MongoClient
 import json
 from flask import redirect
 import html
 import hashlib
+import time
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*", transports='websocket')
 
 client = MongoClient("mongodb://mongo:27017/")
 db = client["CSE312ProjectDB"]
@@ -35,6 +39,15 @@ def hash_function(stringToHash):
 def verify_password(password, hash):
     return bcrypt.checkpw(password.encode('utf-8'), hash)
 
+def countdown_timer(duration, room):
+    while duration:
+        hours, remainder = divmod(duration, 3600)
+        mins, secs = divmod(remainder, 60)
+        timeformat = '{:02d}:{:02d}:{:02d}'.format(hours, mins, secs)
+        socketio.emit('timer', {'data': timeformat}, room=room)
+        time.sleep(1)
+        duration -= 1
+
 @app.route('/')
 def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
@@ -48,6 +61,21 @@ def home():
             response.set_cookie('username', nametest)
         return response
     return render_template('index.html')
+
+@app.route('/start-quiz', methods=['POST'])
+def start_quiz():
+    # Get the duration from the request body
+    duration_in_hours = request.json.get('duration')
+    if duration_in_hours is None:
+        return "Duration not provided", 400
+
+    # Convert the duration to seconds
+    duration_in_seconds = int(duration_in_hours) * 60 * 60
+
+    # Start the quiz and the timer
+    thread = Thread(target=countdown_timer, args=(duration_in_seconds, request.sid))
+    thread.start()
+    return "Quiz started", 200
 
 @app.route('/login')
 def login():
@@ -142,6 +170,7 @@ def user_grades():
         return render_template('login.html')
     else:
         #TODO: finish this later
+        return 
 
 
 @app.route('/createPost', methods=['POST'])
