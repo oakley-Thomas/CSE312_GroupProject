@@ -12,7 +12,8 @@ function addQuiz(messageJSON) {
 
 function postHTML(messageJSON) {
     const quizTitle = messageJSON.title;
-    const timeRemaining = messageJSON.duration
+    const timeRemaining = messageJSON.duration;
+    const image = messageJSON.image;
     let postHTML = "<form id='" + quizTitle + "'>"
     postHTML += "<h2 class='postTitle'>" + quizTitle + "</h2>";
     postHTML += "<p> Time Remaining: " + timeRemaining + "</p>";
