@@ -97,39 +97,54 @@ def clear_quizzes():
 
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
-    #if request.cookies.get("auth-token") == None:
-     #   return
+    """
+    if request.cookies.get("auth-token") == None:
+        response = "Unauthenticated"
+        response = "OK"
+        return json.dumps(response)"""
+    
     post = request.get_json(force=True)
-    # Get username and create database: Title -> Title, Choices(json), Correct ("option1", "option2"...)
-    post["title"] = html.escape(post["title"])
-    # TODO: Ask ChatGPT if its a valid question?
-    # TODO: Escape each input answer HTML
-    post["correct"] = html.escape(post["correct"])
 
+    # Escape HTML
+    post["title"] = html.escape(post["title"])
+    post["correct"] = html.escape(post["correct"])
+    post["duration"] = html.escape(post["duration"])
+    post["category"] = html.escape(post["category"])
+
+    # make sure not a duplicate question
+    if (quiz_collection.find_one({"title": post["title"]})):
+        print("Duplicate!", flush=True)
+        response = "Duplicate"
+        return json.dumps(response)
+        
+    # Input Checks
     # Make sure a valid duration is given (default to 1 hour)
     if (int(post["duration"]) > 24 or int(post["duration"]) < 1):
         post["duration"] = 1
     
-    print("Duration: " + post["duration"], flush=True)
     #---- Database ---
     quiz = {
         "title": post["title"],
         "choices": post["choices"],
         "answer": post["correct"],
-        "duration": post["duration"]
+        "duration": post["duration"],
+        "category": post["category"]
     }
-    jsonQuiz = json.dumps(quiz)
-    # For now the uid for the post is just the title.... this probably means no duplicate questions
-    quiz_collection.insert_one({post["title"]: jsonQuiz})
+    quiz_collection.insert_one(quiz)
 
-    jsonResponse = json.dumps("OK")
-    return jsonResponse
+    response = "OK"
+    return json.dumps(response)
 
 @app.route('/answer-quiz', methods=['POST'])
 def answer_quiz():
     post = request.get_json(force=True)
     print("Post ID: " + post["id"], flush=True)
     print("Selected Answer: " + post["answer"], flush=True)
+    # Auth check
+    if request.cookies.get("auth-token") == None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    
     jsonResponse = json.dumps("OK")
     return jsonResponse
 
@@ -142,6 +157,8 @@ def user_grades():
         return render_template('login.html')
     else:
         #TODO: finish this later
+        jsonResponse = json.dumps("Work In Progress")
+        return jsonResponse
 
 
 @app.route('/createPost', methods=['POST'])
