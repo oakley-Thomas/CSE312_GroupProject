@@ -1,0 +1,28 @@
+<!-- user_grades.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/posts.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>User Grades</title>
+</head>
+<body>
+    <h1>{{ user.username }}'s Grades</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Questions</th>
+                <th>Score </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ grade.question.text }}</td>
+                <td>{{ grade.score }}/{{ grade.max_points }}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
