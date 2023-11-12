@@ -100,6 +100,12 @@ def login():
     print("Redirecting to Login Page")
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    resp = make_response()
+    resp.set_cookie('auth-token', 'unauth')
+    return resp
+
 @app.route('/login-request', methods=['POST'])
 def loginRequest():
     username = request.form["username"]
@@ -151,26 +157,45 @@ def clear_quizzes():
 
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
-    #if request.cookies.get("auth-token") == None:
-     #   return
-    post = request.get_json(force=True)
-    # Get username and create database: Title -> Title, Choices(json), Correct ("option1", "option2"...)
-    post["title"] = html.escape(post["title"])
-    # TODO: Ask ChatGPT if its a valid question?
-    # TODO: Escape each input answer HTML
-    post["correct"] = html.escape(post["correct"])
+    token = request.cookies.get("auth-token") 
+    if token is None or token == 'unauth':
+        response = "Unauthenticated"
+        return json.dumps(response)
+    
+    user = registered_users.find_one({"auth-token": token})["username"]
+    if user is None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    print("Username: " + str(user), flush=True)
+    
 
+    post = request.get_json(force=True)
+
+    # Escape HTML
+    post["title"] = html.escape(post["title"])
+    post["correct"] = html.escape(post["correct"])
+    post["duration"] = html.escape(post["duration"])
+    post["category"] = html.escape(post["category"])
+
+    # make sure not a duplicate question
+    if (quiz_collection.find_one({"title": post["title"]})):
+        print("Duplicate!", flush=True)
+        response = "Duplicate"
+        return json.dumps(response)
+        
+    # Input Checks
     # Make sure a valid duration is given (default to 1 hour)
     if (int(post["duration"]) > 24 or int(post["duration"]) < 1):
         post["duration"] = 1
     
-    print("Duration: " + post["duration"], flush=True)
     #---- Database ---
     quiz = {
         "title": post["title"],
         "choices": post["choices"],
         "answer": post["correct"],
-        "duration": post["duration"]
+        "duration": post["duration"],
+        "category": post["category"],
+        "username": user
     }
     if post.get("image") != None:
         quiz["image"] = "images/" + post["title"] + '.jpg'
@@ -179,20 +204,29 @@ def submit_quiz():
         file = open('./static/uploaded-images/' + post["title"] + '.jpg', 'wb')
         file.write(image_as_bytes)
         file.close()
-    jsonQuiz = json.dumps(quiz)
-    # For now the uid for the post is just the title.... this probably means no duplicate questions
-    quiz_collection.insert_one({post["title"]: jsonQuiz})
+    quiz_collection.insert_one(quiz)
 
-    jsonResponse = json.dumps("OK")
-    return jsonResponse
+    response = "OK"
+    return json.dumps(response)
 
 @app.route('/answer-quiz', methods=['POST'])
 def answer_quiz():
     post = request.get_json(force=True)
-    print("Post ID: " + post["id"], flush=True)
-    print("Selected Answer: " + post["answer"], flush=True)
-    jsonResponse = json.dumps("OK")
-    return jsonResponse
+    token = request.cookies.get("auth-token") 
+
+    if token is None or token == 'unauth':
+        response = "Unauthenticated"
+        return json.dumps(response)
+    
+    username = registered_users.find_one({"auth-token": token})["username"]
+    if username is None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    else:
+        jsonResponse = json.dumps("OK")
+        return jsonResponse
+
+    
 
 @app.route('/userGrades')
 def user_grades():
