@@ -15,6 +15,7 @@ function postHTML(messageJSON) {
     const quizTitle = messageJSON.title;
     const timeRemaining = messageJSON.duration;
     const owner = messageJSON.username;
+    const image = messageJSON.image
     let postHTML = "<form id='" + quizTitle + "'>"
     postHTML += "<h2 class='postTitle'>" + quizCategory + "</h2>";
     postHTML += "<h3 class='postTitle'>" + quizTitle + "</h2>";

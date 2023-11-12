@@ -197,13 +197,16 @@ def submit_quiz():
         "category": post["category"],
         "username": user
     }
-    if post.get("image") != None:
+
+    if post["image"] != None:
+        print("Found Image!", flush=True)
         quiz["image"] = "images/" + post["title"] + '.jpg'
         the_image = post["image"].split(',')[1]
         image_as_bytes = base64.b64decode(the_image)
         file = open('./static/uploaded-images/' + post["title"] + '.jpg', 'wb')
         file.write(image_as_bytes)
         file.close()
+    
     quiz_collection.insert_one(quiz)
 
     response = "OK"
