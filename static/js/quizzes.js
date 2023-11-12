@@ -11,9 +11,10 @@ function addQuiz(messageJSON) {
 }
 
 function postHTML(messageJSON) {
-    const quizCategory = messageJSON.category
+    const quizCategory = messageJSON.category;
     const quizTitle = messageJSON.title;
-    const timeRemaining = messageJSON.duration
+    const timeRemaining = messageJSON.duration;
+    const owner = messageJSON.username;
     let postHTML = "<form id='" + quizTitle + "'>"
     postHTML += "<h2 class='postTitle'>" + quizCategory + "</h2>";
     postHTML += "<h3 class='postTitle'>" + quizTitle + "</h2>";
@@ -25,6 +26,7 @@ function postHTML(messageJSON) {
     }
     postHTML += "<input type='button' value='Answer' onclick='answerQuiz(this.form)'>"
     postHTML += "</form>"
+    postHTML += "<div class='postOwner'>Posted by: " + owner + "</div>";
     postHTML += "<div class='postLine'></div>";
     return postHTML;
 }
@@ -41,12 +43,6 @@ function answerQuiz(form) {
     else{
         alert("Please choose an answer to submit.");
     }
-}
-
-function logout() {
-    const token = localStorage.getItem("authtoken");
-    localStorage.removeItem("authtoken");
-    location.replace("/login");
 }
 
 function updatePostHistory() {

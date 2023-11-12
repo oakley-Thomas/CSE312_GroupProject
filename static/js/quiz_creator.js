@@ -106,10 +106,6 @@ function hideQuizCreator(inResponse)
     document.getElementById("backButton").onclick = function() { returnHome() }
 }
 
-function returnHome() {
-    location.replace("/");
-}
-
 function confirmSubmission(response)
 {
     if (response.data == "OK")

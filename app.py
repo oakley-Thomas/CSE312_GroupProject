@@ -54,6 +54,12 @@ def login():
     print("Redirecting to Login Page")
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    resp = make_response()
+    resp.set_cookie('auth-token', 'unauth')
+    return resp
+
 @app.route('/login-request', methods=['POST'])
 def loginRequest():
     username = request.form["username"]
@@ -97,12 +103,18 @@ def clear_quizzes():
 
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
-    """
-    if request.cookies.get("auth-token") == None:
+    token = request.cookies.get("auth-token") 
+    if token is None or token == 'unauth':
         response = "Unauthenticated"
-        response = "OK"
-        return json.dumps(response)"""
+        return json.dumps(response)
     
+    user = registered_users.find_one({"auth-token": token})["username"]
+    if user is None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    print("Username: " + str(user), flush=True)
+    
+
     post = request.get_json(force=True)
 
     # Escape HTML
@@ -128,7 +140,8 @@ def submit_quiz():
         "choices": post["choices"],
         "answer": post["correct"],
         "duration": post["duration"],
-        "category": post["category"]
+        "category": post["category"],
+        "username": user
     }
     quiz_collection.insert_one(quiz)
 
@@ -138,15 +151,21 @@ def submit_quiz():
 @app.route('/answer-quiz', methods=['POST'])
 def answer_quiz():
     post = request.get_json(force=True)
-    print("Post ID: " + post["id"], flush=True)
-    print("Selected Answer: " + post["answer"], flush=True)
-    # Auth check
-    if request.cookies.get("auth-token") == None:
+    token = request.cookies.get("auth-token") 
+
+    if token is None or token == 'unauth':
         response = "Unauthenticated"
         return json.dumps(response)
     
-    jsonResponse = json.dumps("OK")
-    return jsonResponse
+    username = registered_users.find_one({"auth-token": token})["username"]
+    if username is None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    else:
+        jsonResponse = json.dumps("OK")
+        return jsonResponse
+
+    
 
 @app.route('/userGrades')
 def user_grades():
