@@ -3,23 +3,31 @@ from flask import Response
 from flask import render_template
 from flask import send_file
 from flask import request
+from flask import send_from_directory
 from flask import make_response
+from flask_socketio import SocketIO, emit
+from threading import Thread
+from flask import session
 import os, bcrypt
 from pymongo import MongoClient
 import json
 from flask import redirect
 import html
 import hashlib
+import time
+import base64
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*", transports='websocket')
 
 client = MongoClient("mongodb://mongo:27017/")
 db = client["CSE312ProjectDB"]
 registered_users = db["users"]
 posts_collection = db["posts"]
 quiz_collection = db["quizzes"]
+timers = {}
 
 
 # @app.route('/', methods=['POST'])
@@ -35,6 +43,17 @@ def hash_function(stringToHash):
 def verify_password(password, hash):
     return bcrypt.checkpw(password.encode('utf-8'), hash)
 
+def countdown_timer(url, duration):
+    while duration:
+        hours, remainder = divmod(duration, 3600)
+        mins, secs = divmod(remainder, 60)
+        timer = '{:02d}:{:02d}:{:02d}'.format(hours, mins, secs)
+        print(timer, end="\r")
+        time.sleep(1)
+        duration -= 1
+        timers[url] = timer  # Update the timer for this quiz
+        socketio.emit('timer', {'url': url, 'data': timer})
+
 @app.route('/')
 def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
@@ -48,6 +67,33 @@ def home():
             response.set_cookie('username', nametest)
         return response
     return render_template('index.html')
+
+@socketio.on('connect')
+def handle_connect():
+    url = request.args.get('url')
+    if url is not None:
+        session['url'] = url
+    print(f"Client connected with url {url}")
+
+@app.route('/start-quiz', methods=['POST'])
+def start_quiz():
+    # Get the URL and duration from the request body
+    url = request.json.get('url')
+    duration_in_hours = request.json.get('duration')
+    if url is None or duration_in_hours is None:
+        return "URL or duration not provided", 400
+
+    # Convert the duration to seconds
+    duration_in_seconds = int(duration_in_hours) * 60 * 60
+
+    # Start the timer for this quiz
+    thread = Thread(target=countdown_timer, args=(url, duration_in_seconds))
+    thread.start()
+    return "Quiz started", 200
+
+@app.route('/test')
+def test_page():
+    return send_from_directory('templates', 'test.html')
 
 @app.route('/login')
 def login():
@@ -87,6 +133,14 @@ def quiz_history():
     all_posts = list(quiz_collection.find({},{"_id": 0}))
     return all_posts
 
+@app.route('/images/<name_of_image>')
+def respond_image(name_of_image):
+    name_of_image = name_of_image.replace('/', '')
+    file = open('./static/uploaded-images/' + name_of_image, 'rb')
+    respond = file.read()
+    file.close()
+    return respond
+
 #TODO this needs to be deleted before pushing to production... clears quiz database
 @app.route('/clear')
 def clear_quizzes():
@@ -118,6 +172,13 @@ def submit_quiz():
         "answer": post["correct"],
         "duration": post["duration"]
     }
+    if post.get("image") != None:
+        quiz["image"] = "images/" + post["title"] + '.jpg'
+        the_image = post["image"].split(',')[1]
+        image_as_bytes = base64.b64decode(the_image)
+        file = open('./static/uploaded-images/' + post["title"] + '.jpg', 'wb')
+        file.write(image_as_bytes)
+        file.close()
     jsonQuiz = json.dumps(quiz)
     # For now the uid for the post is just the title.... this probably means no duplicate questions
     quiz_collection.insert_one({post["title"]: jsonQuiz})
@@ -142,6 +203,7 @@ def user_grades():
         return render_template('login.html')
     else:
         #TODO: finish this later
+        return 
 
 
 @app.route('/createPost', methods=['POST'])
@@ -225,6 +287,6 @@ def regRequest():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    socketio.run(app, debug=True, host='0.0.0.0', port=port)
     print("Listening on port: " + str(port), flush=True)
 
