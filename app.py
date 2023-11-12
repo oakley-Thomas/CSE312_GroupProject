@@ -15,6 +15,7 @@ from flask import redirect
 import html
 import hashlib
 import time
+import base64
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -132,6 +133,14 @@ def quiz_history():
     all_posts = list(quiz_collection.find({},{"_id": 0}))
     return all_posts
 
+@app.route('/images/<name_of_image>')
+def respond_image(name_of_image):
+    name_of_image = name_of_image.replace('/', '')
+    file = open('./static/uploaded-images/' + name_of_image, 'rb')
+    respond = file.read()
+    file.close()
+    return respond
+
 #TODO this needs to be deleted before pushing to production... clears quiz database
 @app.route('/clear')
 def clear_quizzes():
@@ -163,6 +172,13 @@ def submit_quiz():
         "answer": post["correct"],
         "duration": post["duration"]
     }
+    if post.get("image") != None:
+        quiz["image"] = "images/" + post["title"] + '.jpg'
+        the_image = post["image"].split(',')[1]
+        image_as_bytes = base64.b64decode(the_image)
+        file = open('./static/uploaded-images/' + post["title"] + '.jpg', 'wb')
+        file.write(image_as_bytes)
+        file.close()
     jsonQuiz = json.dumps(quiz)
     # For now the uid for the post is just the title.... this probably means no duplicate questions
     quiz_collection.insert_one({post["title"]: jsonQuiz})
