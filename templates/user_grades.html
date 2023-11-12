@@ -1,4 +1,3 @@
-<!-- user_grades.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +6,7 @@
     <link rel="stylesheet" href="/static/css/posts.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <title>User Grades</title>
+    <script src="gradebook.js"></script>
 </head>
 <body>
     <h1>{{ user.username }}'s Grades</h1>
@@ -14,15 +14,12 @@
         <thead>
             <tr>
                 <th>Questions</th>
-                <th>Score </th>
+                <th>Score</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>{{ grade.question.text }}</td>
-                <td>{{ grade.score }}/{{ grade.max_points }}</td>
-            </tr>
+        <tbody id="tableNum">
         </tbody>
     </table>
+    <button onclick="window.location.href='/';">Back to Homepage</button>
 </body>
 </html>
