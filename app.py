@@ -40,7 +40,6 @@ timers = {}
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
 
-
 def verify_password(password, hash):
     return bcrypt.checkpw(password.encode('utf-8'), hash)
 
@@ -241,8 +240,32 @@ def answer_quiz():
         jsonResponse = json.dumps("OK")
         return jsonResponse
 
-    
+@app.route('/view-quiz/<id>')
+def view_quiz(id):
+    quiz_id = str(id)
+    quiz_id = quiz_id.replace("_", " ")
+    quiz_id = quiz_id.replace("*", "?")
 
+    print("Quiz ID: " + quiz_id, flush=True)
+    quiz_data = quiz_collection.find_one({"title": quiz_id})
+    if (quiz_data is None):
+        return render_template("quiz.html", quizTitle = "ERROR", quizCategory = "ERROR", timeRemaining = 0)
+
+    choices = quiz_data["choices"]
+
+    print("Image: " + quiz_data["image"], flush=True)
+    
+    return render_template("quiz.html", 
+                           quizTitle = quiz_data["title"], 
+                           quizCategory = quiz_data["category"], 
+                           timeRemaining = quiz_data["duration"],
+                           quizChoices = choices,
+                           postOwner = quiz_data["username"],
+                           image = respond_image(quiz_data["image"])
+                           )
+
+    
+    
 @app.route('/userGrades')
 def user_grades():
     #token = request.cookies.get("auth-token")
