@@ -1,4 +1,3 @@
-
 function update() {
     const request = new XMLHttpRequest();
 
@@ -17,22 +16,27 @@ function update() {
 
 }
 
+let lastQuestion = "";
+
 function addGrade(data) {
     const tableNum = document.getElementById("tableNum");
     for (const userGrade of data.userGrades) {
-        tableNum.innerHTML += gradeHTML(data.question, userGrade);
+        const questionHTML = (lastQuestion !== data.question) ? `<td>${data.question}</td>` : '<td></td>'; //checks to see if question equals prev question and if it does returns empty tabledata
+        tableNum.innerHTML += gradeHTML(questionHTML, userGrade);
+        lastQuestion = data.question;
     }
 }
 
-function gradeHTML(question,userGrade) {
+function gradeHTML(questionHTML, userGrade) {
     const username = userGrade.username;
     const grade = userGrade.grade;
     return `<tr>
-                <td>${question}</td>
+                ${questionHTML}
                 <td>${grade}</td>
                 <td>${username}</td>
             </tr>`;
 }
+
 
 function clear() {
     const tableNum = document.getElementById("tableNum");
