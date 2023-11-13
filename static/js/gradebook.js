@@ -1,7 +1,5 @@
 
 function update() {
-
-
     const request = new XMLHttpRequest();
 
     request.onreadystatechange = function () {
@@ -21,15 +19,18 @@ function update() {
 
 function addGrade(data) {
     const tableNum = document.getElementById("tableNum");
-    tableNum.innerHTML += gradeHTML(data);
+    for (const userGrade of data.userGrades) {
+        tableNum.innerHTML += gradeHTML(data.question, userGrade);
+    }
 }
 
-function gradeHTML(data) {
-    const question = data.question;
-    const grade = data.grade;
+function gradeHTML(question,userGrade) {
+    const username = userGrade.username;
+    const grade = userGrade.grade;
     return `<tr>
                 <td>${question}</td>
                 <td>${grade}</td>
+                <td>${username}</td>
             </tr>`;
 }
 
