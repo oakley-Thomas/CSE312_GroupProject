@@ -82,7 +82,8 @@ def handle_connect():
 def start_quiz():
     # Get the URL and duration from the request body
     url = request.json.get('url')
-    print("URL: " + url)
+    url = unquote(url).replace(" ", "_").replace("?","*")
+    print("QUIZ URL: " + url, flush=True)
     duration_in_hours = request.json.get('duration')
     if url is None or duration_in_hours is None:
         return "URL or duration not provided", 400

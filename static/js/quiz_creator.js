@@ -59,7 +59,8 @@ async function postData() {
     urlTitle = encodeURIComponent(title);
 
     // Send this request to start the timer
-    urlPage = window.location.pathname + "/view-quiz/" + urlTitle
+    urlPage = window.location.origin + "/view-quiz/" + urlTitle
+    console.log("URL: " + urlPage)
     const timerPost = {url: urlPage, duration: duration}
     axios.post("/start-quiz", timerPost)
 
