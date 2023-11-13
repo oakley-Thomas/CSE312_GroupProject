@@ -1,6 +1,4 @@
 function update() {
-
-
     const request = new XMLHttpRequest();
 
     request.onreadystatechange = function () {
@@ -15,24 +13,17 @@ function update() {
 
     request.open("GET", "/user_grades");
     request.send();
-
 }
-
-let lastQuestion = "";
 
 function addGrade(data) {
     const tableNum = document.getElementById("tableNum");
-    const questionHTML = (lastQuestion !== data.question) ? `<td>${data.question}</td>` : '<td></td>';
-    tableNum.innerHTML += gradeHTML(questionHTML, data);
-    lastQuestion = data.question;
+    tableNum.innerHTML += gradeHTML(data);
 }
 
-function gradeHTML(questionHTML, data) {
-    const grade = data.userGrades;
-    return `<tr>
-                ${questionHTML}
-                <td>${grade}</td>
-            </tr>`;
+function gradeHTML(data) {
+    const question = data.question;
+    const grade = data.grade;
+    return `<tr><td>${question}</td><td>${grade}</td></tr>`;
 }
 
 function clear() {

@@ -11,7 +11,7 @@ function update() {
         }
     };
 
-    request.open("GET", "/user_grades");
+    request.open("GET", "/user_grades"); // replace path with whatever path in the approute
     request.send();
 
 }
