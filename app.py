@@ -60,6 +60,7 @@ def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
         token = request.cookies.get("auth-token")
         user = get_user()
+
         # user = db["users"].find_one({"auth-token": token})
         response = make_response(render_template('index.html'))
         if user is None:
@@ -113,8 +114,11 @@ def get_user():
     auth_token_from_cookie = request.cookies.get("auth-token")
     hashed_of_above_token = hashlib.sha256(auth_token_from_cookie.encode()).hexdigest()
     stored_hash = registered_users.find_one({"auth-token": hashed_of_above_token})
-    user = stored_hash["username"]
-    return user
+    if stored_hash is not None:
+        user = stored_hash["username"]
+        return user
+    else:
+        return None
 
 @app.route('/login-request', methods=['POST'])
 def loginRequest():
@@ -174,11 +178,9 @@ def submit_quiz():
         return json.dumps(response)
 
     user = get_user()
-    # user = registered_users.find_one({"auth-token": token})["username"]
     if user is None:
         response = "Unauthenticated"
         return json.dumps(response)
-    print("Username: " + str(user), flush=True)
     
 
     post = request.get_json(force=True)
@@ -234,7 +236,16 @@ def answer_quiz():
         return json.dumps(response)
 
     username = get_user()
-    # username = registered_users.find_one({"auth-token": token})["username"]
+    quiz_id = unquote(post["id"])
+    print("\n\nMY QUIZ ID: " + quiz_id, flush=True)
+    quiz_data = quiz_collection.find_one({"title": quiz_id})
+    ownerUsername = quiz_data["username"]
+
+
+    if ownerUsername == username:
+        response = "Owner"
+        return json.dumps(response)
+    
     if username is None:
         response = "Unauthenticated"
         return json.dumps(response)
@@ -248,7 +259,6 @@ def view_quiz(id):
     quiz_id = quiz_id.replace("_", " ")
     quiz_id = quiz_id.replace("*", "?")
     
-    print("Quiz ID: " + quiz_id, flush=True)
     quiz_data = quiz_collection.find_one({"title": quiz_id})
     if (quiz_data is None):
         return render_template("quiz.html", quizTitle = "ERROR", quizCategory = "ERROR", timeRemaining = 0)
