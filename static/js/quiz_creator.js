@@ -55,6 +55,13 @@ async function postData() {
     else{
         alert("Please select the correct answer");
     }
+
+    urlTitle = encodeURIComponent(title);
+    urlPage = window.location.pathname + "/view-quiz/" + urlTitle
+    const timerPost = {url: urlPage, duration: duration}
+    axios.post("/start-quiz", timerPost)
+
+
     updatePostHistory();
 }
 

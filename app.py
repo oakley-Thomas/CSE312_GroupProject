@@ -5,6 +5,7 @@ from flask import send_file
 from flask import request
 from flask import send_from_directory
 from flask import make_response
+from urllib.parse import unquote, quote
 from flask_socketio import SocketIO, emit
 from threading import Thread
 from flask import session
@@ -80,6 +81,7 @@ def handle_connect():
 def start_quiz():
     # Get the URL and duration from the request body
     url = request.json.get('url')
+    print("URL: " + url)
     duration_in_hours = request.json.get('duration')
     if url is None or duration_in_hours is None:
         return "URL or duration not provided", 400
@@ -148,7 +150,7 @@ def quiz_history():
     all_posts = list(quiz_collection.find({},{"_id": 0}))
     return all_posts
 
-@app.route('/images/<name_of_image>')
+@app.route('/view-quiz/images/<name_of_image>')
 def respond_image(name_of_image):
     name_of_image = name_of_image.replace('/', '')
     file = open('./static/uploaded-images/' + name_of_image, 'rb')
@@ -245,7 +247,7 @@ def view_quiz(id):
     quiz_id = str(id)
     quiz_id = quiz_id.replace("_", " ")
     quiz_id = quiz_id.replace("*", "?")
-
+    
     print("Quiz ID: " + quiz_id, flush=True)
     quiz_data = quiz_collection.find_one({"title": quiz_id})
     if (quiz_data is None):
@@ -261,10 +263,14 @@ def view_quiz(id):
                            timeRemaining = quiz_data["duration"],
                            quizChoices = choices,
                            postOwner = quiz_data["username"],
-                           image = respond_image(quiz_data["image"])
+                           image = quote(quiz_data["image"])
                            )
 
-    
+@app.template_filter('url_decode')
+def url_decode_filter(s):
+    ret = unquote(s) 
+    print("Decoded: " + ret)
+    return ret
     
 @app.route('/userGrades')
 def user_grades():
