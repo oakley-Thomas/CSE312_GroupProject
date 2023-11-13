@@ -310,6 +310,56 @@ def answer_quiz():
         jsonResponse = json.dumps("OK")
         return jsonResponse
 
+@app.route('/user_grades')
+def send_grades():
+    user = get_user()
+    if registered_users.find_one({"username": user}).get("quizzes_list") == None:
+        a_dict = [{"question": "", "grade": ""}, {"question": "", "grade": ""}]
+        return json.dumps(a_dict)
+    quizzes = registered_users.find_one({"username": user})["quizzes_list"]
+    list_to_send = []
+    for each_quiz in quizzes:
+        quiz = quizzes[each_quiz]
+        a_quiz = {}
+        a_quiz["question"] = each_quiz
+        hashed_grade = quiz["grade"]
+        unhashed_grade = get_the_grade(hashed_grade)
+        a_quiz["grade"] = unhashed_grade
+        list_to_send.append(a_quiz)
+    send_as_json = json.dumps(list_to_send)
+    return send_as_json
+
+@app.route('/user_posted_quizzes_grades')
+def send_quizzes_grades():
+    user = get_user()
+    quizzes_by_this_user = quiz_collection.find({"username": user})
+    list_of_quizzes = []
+    for quiz in quizzes_by_this_user:
+        title = quiz["title"]
+        list_of_quizzes.append(title)
+    list_to_send = []
+    for quizzes in list_of_quizzes:
+        for users in list(registered_users.find()):
+            if users["username"] == user:
+                pass
+            else:
+                if users.get("quizzes_list") == None:
+                    pass
+                elif (users["quizzes_list"]).get(quizzes) == None:
+                    pass
+                else:
+                    a_quiz = {}
+                    this_quiz = users["quizzes_list"][quizzes]
+                    a_quiz["question"] = quizzes
+                    a_quiz["username"] = users["username"]
+                    hashed_grade = this_quiz["grade"]
+                    unhashed_grade = get_the_grade(hashed_grade)
+                    a_quiz["grade"] = unhashed_grade
+                    list_to_send.append(a_quiz)
+
+    send_as_json = json.dumps(list_to_send)
+    return send_as_json
+
 @app.route('/view-quiz/<id>')
 def view_quiz(id):
     quiz_id = str(id)
@@ -349,7 +399,11 @@ def url_decode_filter(s):
     ret = unquote(s) 
     print("Decoded: " + ret)
     return ret
-    
+
+@app.route('/gradebook')
+def user_gradebook():
+    return render_template('user_gradebook.html')
+
 @app.route('/userGrades')
 def user_grades():
     #token = request.cookies.get("auth-token")
