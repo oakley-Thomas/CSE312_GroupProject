@@ -22,7 +22,7 @@ function addGrade(data) {
     const tableNum = document.getElementById("tableNum");
 //    for (const userGrade of data) {
         const questionHTML = (lastQuestion !== data.question) ? `<td>${data.question}</td>` : '<td></td>'; //checks to see if question equals prev question and if it does returns empty tabledata
-//        tableNum.innerHTML += gradeHTML(questionHTML, userGrade);
+//      tableNum.innerHTML += gradeHTML(questionHTML, userGrade);
         tableNum.innerHTML += gradeHTML(questionHTML, data)
         lastQuestion = data.question;
 //    }
