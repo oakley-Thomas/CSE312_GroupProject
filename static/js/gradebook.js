@@ -11,7 +11,7 @@ function update() {
         }
     };
 
-    request.open("GET", "/user_grades"); // replace path with whatever path in the approute
+    request.open("GET", "/user_posted_quizzes_grades"); // replace path with whatever path in the approute
     request.send();
 
 }
@@ -20,11 +20,12 @@ let lastQuestion = "";
 
 function addGrade(data) {
     const tableNum = document.getElementById("tableNum");
-    for (const userGrade of data.userGrades) {
+//    for (const userGrade of data) {
         const questionHTML = (lastQuestion !== data.question) ? `<td>${data.question}</td>` : '<td></td>'; //checks to see if question equals prev question and if it does returns empty tabledata
-        tableNum.innerHTML += gradeHTML(questionHTML, userGrade);
+//        tableNum.innerHTML += gradeHTML(questionHTML, userGrade);
+        tableNum.innerHTML += gradeHTML(questionHTML, data)
         lastQuestion = data.question;
-    }
+//    }
 }
 
 function gradeHTML(questionHTML, userGrade) {
