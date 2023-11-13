@@ -5,6 +5,7 @@ from flask import send_file
 from flask import request
 from flask import send_from_directory
 from flask import make_response
+from urllib.parse import unquote, quote
 from flask_socketio import SocketIO, emit
 from threading import Thread
 from flask import session
@@ -15,6 +16,8 @@ from flask import redirect
 import html
 import hashlib
 import time
+import base64
+import string, random
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -38,7 +41,6 @@ timers = {}
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
 
-
 def verify_password(password, hash):
     return bcrypt.checkpw(password.encode('utf-8'), hash)
 
@@ -57,12 +59,14 @@ def countdown_timer(url, duration):
 def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
         token = request.cookies.get("auth-token")
-        user = db["users"].find_one({"auth-token": token})
+        user = get_user()
+
+        # user = db["users"].find_one({"auth-token": token})
         response = make_response(render_template('index.html'))
         if user is None:
             response.set_cookie('username', "inv-token")
         if user is not None:
-            nametest = user["username"]
+            nametest = user # user["username"]
             response.set_cookie('username', nametest)
         return response
     return render_template('index.html')
@@ -78,6 +82,8 @@ def handle_connect():
 def start_quiz():
     # Get the URL and duration from the request body
     url = request.json.get('url')
+    url = unquote(url).replace(" ", "_").replace("?","*")
+    print("QUIZ URL: " + url, flush=True)
     duration_in_hours = request.json.get('duration')
     if url is None or duration_in_hours is None:
         return "URL or duration not provided", 400
@@ -99,6 +105,22 @@ def login():
     print("Redirecting to Login Page")
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    resp = make_response()
+    resp.set_cookie('auth-token', 'unauth')
+    return resp
+
+def get_user():
+    auth_token_from_cookie = request.cookies.get("auth-token")
+    hashed_of_above_token = hashlib.sha256(auth_token_from_cookie.encode()).hexdigest()
+    stored_hash = registered_users.find_one({"auth-token": hashed_of_above_token})
+    if stored_hash is not None:
+        user = stored_hash["username"]
+        return user
+    else:
+        return None
+
 @app.route('/login-request', methods=['POST'])
 def loginRequest():
     username = request.form["username"]
@@ -108,10 +130,11 @@ def loginRequest():
         user_data = registered_users.find_one({'username': username})
         if user_data and verify_password(password, user_data['password_hash']):
             # authtoken = hash_function(user_data['username'])
-            authtoken = hashlib.sha256(user_data['username'].encode()).hexdigest()
+            random_string = ''.join(random.choices(string.ascii_letters, k=25))
+            authtoken = hashlib.sha256(random_string.encode()).hexdigest()
             registered_users.update_one({'username': username}, {'$set': {'auth-token': authtoken}})
             response = make_response(redirect('/'))
-            response.set_cookie('auth-token', authtoken, httponly=True, max_age=3600)
+            response.set_cookie('auth-token', random_string, httponly=True, max_age=3600)
             return response
 
 
@@ -132,6 +155,14 @@ def quiz_history():
     all_posts = list(quiz_collection.find({},{"_id": 0}))
     return all_posts
 
+@app.route('/view-quiz/images/<name_of_image>')
+def respond_image(name_of_image):
+    name_of_image = name_of_image.replace('/', '')
+    file = open('./static/uploaded-images/' + name_of_image, 'rb')
+    respond = file.read()
+    file.close()
+    return respond
+
 #TODO this needs to be deleted before pushing to production... clears quiz database
 @app.route('/clear')
 def clear_quizzes():
@@ -140,54 +171,249 @@ def clear_quizzes():
     jsonResponse = json.dumps("Cleared Database")
     return jsonResponse
 
+def get_the_grade(hashed_value):
+    if bcrypt.checkpw(b'0', hashed_value):
+        return '0'
+    elif bcrypt.checkpw(b'1', hashed_value):
+        return '1'
+    elif bcrypt.checkpw(b'Not Answered (Grade = 0)', hashed_value):
+        return 'Not Answered (Grade = 0)'
+
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
-    #if request.cookies.get("auth-token") == None:
-     #   return
-    post = request.get_json(force=True)
-    # Get username and create database: Title -> Title, Choices(json), Correct ("option1", "option2"...)
-    post["title"] = html.escape(post["title"])
-    # TODO: Ask ChatGPT if its a valid question?
-    # TODO: Escape each input answer HTML
-    post["correct"] = html.escape(post["correct"])
+    token = request.cookies.get("auth-token") 
+    if token is None or token == 'unauth':
+        response = "Unauthenticated"
+        return json.dumps(response)
 
+    user = get_user()
+    if user is None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    
+
+    post = request.get_json(force=True)
+
+    # Escape HTML
+    post["title"] = html.escape(post["title"])
+    post["correct"] = html.escape(post["correct"])
+    post["duration"] = html.escape(post["duration"])
+    post["category"] = html.escape(post["category"])
+
+    for choice in post["choices"].keys():
+        post["choices"][choice] = html.escape(post["choices"][choice])
+    #post["choices"] = html.escape(post["choices"])
+
+    # make sure not a duplicate question
+    if (quiz_collection.find_one({"title": post["title"]})):
+        print("Duplicate!", flush=True)
+        response = "Duplicate"
+        return json.dumps(response)
+        
+    # Input Checks
     # Make sure a valid duration is given (default to 1 hour)
     if (int(post["duration"]) > 24 or int(post["duration"]) < 1):
         post["duration"] = 1
     
-    print("Duration: " + post["duration"], flush=True)
     #---- Database ---
     quiz = {
         "title": post["title"],
         "choices": post["choices"],
         "answer": post["correct"],
-        "duration": post["duration"]
+        "duration": post["duration"],
+        "category": post["category"],
+        "username": user
     }
-    jsonQuiz = json.dumps(quiz)
-    # For now the uid for the post is just the title.... this probably means no duplicate questions
-    quiz_collection.insert_one({post["title"]: jsonQuiz})
 
-    jsonResponse = json.dumps("OK")
-    return jsonResponse
+    if post.get("image") != None:
+        print("Found Image!", flush=True)
+        quiz["image"] = "images/" + post["title"].replace('?', '') + '.jpg'
+        the_image = post["image"].split(',')[1]
+        image_as_bytes = base64.b64decode(the_image)
+        file = open('./static/uploaded-images/' + post["title"].replace('?', '') + '.jpg', 'wb')
+        file.write(image_as_bytes)
+        file.close()
+
+    new_quiz = {}
+    new_quiz["option_chosen"] = ""
+    hashed_grade = bcrypt.hashpw(b'Not Answered (Grade = 0)', bcrypt.gensalt())
+    new_quiz["grade"] = hashed_grade
+    for users in list(registered_users.find()):
+        if users["username"] == user:
+            pass
+        else:
+            if users.get("quizzes_list") == None:
+                quiz_to_insert = {quiz["title"]: new_quiz}
+                registered_users.update_one({"username": users["username"]}, {"$set": {"quizzes_list": quiz_to_insert}})
+            else:
+                previous_quizzes = users["quizzes_list"]
+                previous_quizzes[quiz["title"]] = new_quiz
+                registered_users.update_one({"username": users["username"]}, {"$set": {"quizzes_list": previous_quizzes}})
+
+    quiz_collection.insert_one(quiz)
+
+    response = "OK"
+    return json.dumps(response)
+
+def grade_quiz(post):
+    username = get_user()
+    user = registered_users.find_one({"username": username})
+    
+    question = unquote(post["id"])
+    answer_given = post["answer"]
+    quiz = quiz_collection.find_one({"title": question})
+    correct_answer = quiz["answer"]
+
+    if user["quizzes_list"].get(question) == None:
+        return
+
+    quizzes_updated = user["quizzes_list"]
+
+    if quizzes_updated[question]["option_chosen"] == "":
+        if answer_given == correct_answer:
+            quizzes_updated[question]["option_chosen"] = answer_given
+            quizzes_updated[question]["grade"] = bcrypt.hashpw(b'1', bcrypt.gensalt())
+            registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
+            return
+        else:
+            quizzes_updated[question]["option_chosen"] = answer_given
+            quizzes_updated[question]["grade"] = bcrypt.hashpw(b'0', bcrypt.gensalt())
+            registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
+            return
+    else:
+        return
 
 @app.route('/answer-quiz', methods=['POST'])
 def answer_quiz():
     post = request.get_json(force=True)
-    print("Post ID: " + post["id"], flush=True)
-    print("Selected Answer: " + post["answer"], flush=True)
-    jsonResponse = json.dumps("OK")
-    return jsonResponse
+    token = request.cookies.get("auth-token") 
+
+    if token is None or token == 'unauth':
+        response = "Unauthenticated"
+        return json.dumps(response)
+
+    username = get_user()
+    quiz_id = unquote(post["id"])
+    quiz_data = quiz_collection.find_one({"title": quiz_id})
+    ownerUsername = quiz_data["username"]
+
+
+    if ownerUsername == username:
+        response = "Owner"
+        return json.dumps(response)
+    
+    if username is None:
+        response = "Unauthenticated"
+        return json.dumps(response)
+    
+    else:
+        grade_quiz(post)
+        response = "OK"
+        return json.dumps(response)
+
+@app.route('/user_grades')
+def send_grades():
+    user = get_user()
+    if registered_users.find_one({"username": user}).get("quizzes_list") == None:
+        a_dict = [{"question": "", "grade": ""}, {"question": "", "grade": ""}]
+        return json.dumps(a_dict)
+    quizzes = registered_users.find_one({"username": user})["quizzes_list"]
+    list_to_send = []
+    for each_quiz in quizzes:
+        quiz = quizzes[each_quiz]
+        a_quiz = {}
+        a_quiz["question"] = each_quiz
+        hashed_grade = quiz["grade"]
+        unhashed_grade = get_the_grade(hashed_grade)
+        a_quiz["grade"] = unhashed_grade
+        list_to_send.append(a_quiz)
+    send_as_json = json.dumps(list_to_send)
+    return send_as_json
+
+@app.route('/user_posted_quizzes_grades')
+def send_quizzes_grades():
+    user = get_user()
+    quizzes_by_this_user = quiz_collection.find({"username": user})
+    list_of_quizzes = []
+    for quiz in quizzes_by_this_user:
+        title = quiz["title"]
+        list_of_quizzes.append(title)
+    list_to_send = []
+    for quizzes in list_of_quizzes:
+        for users in list(registered_users.find()):
+            if users["username"] == user:
+                pass
+            else:
+                if users.get("quizzes_list") == None:
+                    pass
+                elif (users["quizzes_list"]).get(quizzes) == None:
+                    pass
+                else:
+                    a_quiz = {}
+                    this_quiz = users["quizzes_list"][quizzes]
+                    a_quiz["question"] = quizzes
+                    a_quiz["username"] = users["username"]
+                    hashed_grade = this_quiz["grade"]
+                    unhashed_grade = get_the_grade(hashed_grade)
+                    a_quiz["grade"] = unhashed_grade
+                    list_to_send.append(a_quiz)
+
+    send_as_json = json.dumps(list_to_send)
+    return send_as_json
+
+@app.route('/view-quiz/<id>')
+def view_quiz(id):
+    quiz_id = str(id)
+    quiz_id = quiz_id.replace("_", " ")
+    quiz_id = quiz_id.replace("*", "?")
+    
+    quiz_data = quiz_collection.find_one({"title": quiz_id})
+    if (quiz_data is None):
+        return render_template("quiz.html", quizTitle = "ERROR", quizCategory = "ERROR", timeRemaining = 0)
+
+    choices = quiz_data["choices"]
+    img = quiz_data.get("image")
+
+    if img is not None:
+        return render_template("quiz.html", 
+                           quizTitle = quiz_data["title"], 
+                           quizCategory = quiz_data["category"], 
+                           timeRemaining = quiz_data["duration"],
+                           quizChoices = choices,
+                           postOwner = quiz_data["username"],
+                           image = quote(img)
+                           )
+    else:
+        return render_template("quiz.html", 
+                           quizTitle = quiz_data["title"], 
+                           quizCategory = quiz_data["category"], 
+                           timeRemaining = quiz_data["duration"],
+                           quizChoices = choices,
+                           postOwner = quiz_data["username"]
+                           )
+
+    
+    
+
+@app.template_filter('url_decode')
+def url_decode_filter(s):
+    ret = unquote(s) 
+    print("Decoded: " + ret)
+    return ret
+
+@app.route('/gradebook')
+def user_gradebook():
+    return render_template('user_gradebook.html')
 
 @app.route('/userGrades')
 def user_grades():
-    token = request.cookies.get("auth-token")
-    user = db["users"].find_one({"auth-token": token})
+    #token = request.cookies.get("auth-token")
+    #user = db["users"].find_one({"auth-token": token})
 
-    if user is None:
-        return render_template('login.html')
-    else:
-        #TODO: finish this later
-        return 
+    #if user is None:
+        #return render_template('login.html')
+    #else:
+    return render_template('user_grades.html')
 
 
 @app.route('/createPost', methods=['POST'])

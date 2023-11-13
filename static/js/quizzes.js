@@ -11,10 +11,21 @@ function addQuiz(messageJSON) {
 }
 
 function postHTML(messageJSON) {
-    const quizTitle = messageJSON.title;
-    const timeRemaining = messageJSON.duration
+    const quizCategory = messageJSON.category;
+    // This is kind of a hacky way to encode the ?'s (the reason for this is the request doesn't treat the ? as part of the string)
+    // Decoce
+    const quizTitle = messageJSON.title.replace(/_/g," ").replace("*", "?");
+    // Encode
+    const urlLookup = messageJSON.title.replace(/ /g,"_").replace("?", "*")
+    const owner = messageJSON.username;
+
+    const image = messageJSON.image
+
+    let postHTML = "<a href=/view-quiz/"+urlLookup+">" + quizTitle + "</a><br>"
+    /*
     let postHTML = "<form id='" + quizTitle + "'>"
-    postHTML += "<h2 class='postTitle'>" + quizTitle + "</h2>";
+    postHTML += "<h2 class='postTitle'>" + quizCategory + "</h2>";
+    postHTML += "<h3 class='postTitle'>" + quizTitle + "</h2>";
     postHTML += "<p> Time Remaining: " + timeRemaining + "</p>";
     for (const [optionLabel, optionValue] of Object.entries(messageJSON.choices))
     {
@@ -26,30 +37,12 @@ function postHTML(messageJSON) {
     }
     postHTML += "<input type='button' value='Answer' onclick='answerQuiz(this.form)'>"
     postHTML += "</form>"
-    postHTML += "<div class='postLine'></div>";
+    postHTML += "<div class='postOwner'>Posted by: " + owner + "</div>";
+    postHTML += "<div class='postLine'></div>";*/
     return postHTML;
 }
 
-// TODO: Convert this to answerQuiz
-function answerQuiz(form) {
-    var selectedRadioButton = form.querySelector("input[name='user-answer']:checked");
-    var quizID = form.id
-    if (selectedRadioButton){
-        const post = { id: quizID, answer: selectedRadioButton.id};
-        axios.post('/answer-quiz', post)
-            .then(response => confirmSubmission())
-            .catch(error => console.error(error));
-    }
-    else{
-        alert("Please choose an answer to submit.");
-    }
-}
 
-function logout() {
-    const token = localStorage.getItem("authtoken");
-    localStorage.removeItem("authtoken");
-    location.replace("/login");
-}
 
 function updatePostHistory() {
     const request = new XMLHttpRequest();
@@ -58,11 +51,8 @@ function updatePostHistory() {
             clearQuizHistory();
             const messages = JSON.parse(this.response);
             for (const message of messages) {
-                for (const [key, value] of Object.entries(message))
-                {
-                    addQuiz(JSON.parse(value));
-                }
-                
+                console.log(message);
+                addQuiz(message);
             }
         }
     }
@@ -70,7 +60,9 @@ function updatePostHistory() {
     request.send();
 }
 
+
+
 function onLoadRun() {
     updatePostHistory();
-    setInterval(updatePostHistory, 5000);
+    setInterval(updatePostHistory, 1000);
 }

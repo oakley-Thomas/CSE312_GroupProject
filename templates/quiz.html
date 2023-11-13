@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="/static/js/quiz.js"></script>
+</head>
+<body>
+    
+
+    <div classname = quizInfo>
+        <form id="{{quizTitle}}">
+            <h2> {{ quizCategory }} </h2>
+            {% if image %}
+                <img src="{{ image | url_decode }}">
+            {% endif %}
+            
+            <h3> {{ quizTitle }} </h2>
+            {% for key, value in quizChoices.items() %}
+                <input type='radio' id={{key}} name='user-answer' value={{value}}></input>
+                <label for={{key}}>{{value}}</label><br></br>
+            {% endfor %}
+            <input type='button' value='Answer' onclick='answerQuiz(this.form)'>
+            <br>
+            <div id="timer">Time: 00:00</div>
+            <div>Posted by: {{ postOwner }}</div>
+        </form>
+        <h2 id="responseMessage"></h2>
+    </div>
+
+    <script>
+        var socket = io.connect('ws://' + window.location.host + '/websocket', { 
+            transports: ['websocket'],
+            query: { url: window.location.href }  // Send the URL of the page
+        });
+        socket.on('connect', function() {
+            console.log('Connected to the server');
+        });
+        socket.on('timer', function(data) {
+            if (data.url === window.location.href) {  // Update the timer only if the URL matches
+                document.getElementById('timer').innerHTML = data.data;
+            }
+        });
+
+    </script>
+</body>
+</html>

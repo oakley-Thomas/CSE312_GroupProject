@@ -1,7 +1,3 @@
-function back() {
-    location.replace("/");
-}
-
 function clearPostHistory() {
     const postHistory = document.getElementById("postHistory");
     postHistory.innerHTML = "";
@@ -52,11 +48,6 @@ function likePost(postId) {
     request.send();
 }
 
-function logout() {
-    const token = localStorage.getItem("authtoken");
-    localStorage.removeItem("authtoken");
-    location.replace("/login");
-}
 
 function updatePostHistory() {
     const request = new XMLHttpRequest();
