@@ -13,7 +13,7 @@
     <div classname = quizInfo>
         <form id="{{quizTitle}}">
             <h2> {{ quizCategory }} </h2>
-            {% if user_authenticated %}
+            {% if image %}
                 <img src="{{ image | url_decode }}">
             {% endif %}
             

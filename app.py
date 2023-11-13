@@ -199,6 +199,10 @@ def submit_quiz():
     post["duration"] = html.escape(post["duration"])
     post["category"] = html.escape(post["category"])
 
+    for choice in post["choices"].keys():
+        post["choices"][choice] = html.escape(post["choices"][choice])
+    #post["choices"] = html.escape(post["choices"])
+
     # make sure not a duplicate question
     if (quiz_collection.find_one({"title": post["title"]})):
         print("Duplicate!", flush=True)
@@ -314,17 +318,28 @@ def view_quiz(id):
         return render_template("quiz.html", quizTitle = "ERROR", quizCategory = "ERROR", timeRemaining = 0)
 
     choices = quiz_data["choices"]
+    img = quiz_data.get("image")
 
-    print("Image: " + quiz_data["image"], flush=True)
-    
-    return render_template("quiz.html", 
+    if img is not None:
+        return render_template("quiz.html", 
                            quizTitle = quiz_data["title"], 
                            quizCategory = quiz_data["category"], 
                            timeRemaining = quiz_data["duration"],
                            quizChoices = choices,
                            postOwner = quiz_data["username"],
-                           image = quote(quiz_data["image"])
+                           image = quote(img)
                            )
+    else:
+        return render_template("quiz.html", 
+                           quizTitle = quiz_data["title"], 
+                           quizCategory = quiz_data["category"], 
+                           timeRemaining = quiz_data["duration"],
+                           quizChoices = choices,
+                           postOwner = quiz_data["username"]
+                           )
+
+    
+    
 
 @app.template_filter('url_decode')
 def url_decode_filter(s):
