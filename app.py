@@ -257,8 +257,8 @@ def submit_quiz():
 def grade_quiz(post):
     username = get_user()
     user = registered_users.find_one({"username": username})
-
-    question = post["id"]
+    
+    question = unquote(post["id"])
     answer_given = post["answer"]
     quiz = quiz_collection.find_one({"title": question})
     correct_answer = quiz["answer"]
@@ -293,7 +293,6 @@ def answer_quiz():
 
     username = get_user()
     quiz_id = unquote(post["id"])
-    print("\n\nMY QUIZ ID: " + quiz_id, flush=True)
     quiz_data = quiz_collection.find_one({"title": quiz_id})
     ownerUsername = quiz_data["username"]
 
@@ -305,10 +304,11 @@ def answer_quiz():
     if username is None:
         response = "Unauthenticated"
         return json.dumps(response)
+    
     else:
         grade_quiz(post)
-        jsonResponse = json.dumps("OK")
-        return jsonResponse
+        response = "OK"
+        return json.dumps(response)
 
 @app.route('/user_grades')
 def send_grades():

@@ -64,5 +64,5 @@ function updatePostHistory() {
 
 function onLoadRun() {
     updatePostHistory();
-    setInterval(updatePostHistory, 5000);
+    setInterval(updatePostHistory, 1000);
 }
