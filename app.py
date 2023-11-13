@@ -16,6 +16,7 @@ import html
 import hashlib
 import time
 import base64
+import string, random
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -58,12 +59,13 @@ def countdown_timer(url, duration):
 def home():
     if request.cookies != None and request.cookies.get("auth-token") != None:
         token = request.cookies.get("auth-token")
-        user = db["users"].find_one({"auth-token": token})
+        user = get_user()
+        # user = db["users"].find_one({"auth-token": token})
         response = make_response(render_template('index.html'))
         if user is None:
             response.set_cookie('username', "inv-token")
         if user is not None:
-            nametest = user["username"]
+            nametest = user # user["username"]
             response.set_cookie('username', nametest)
         return response
     return render_template('index.html')
@@ -106,6 +108,13 @@ def logout():
     resp.set_cookie('auth-token', 'unauth')
     return resp
 
+def get_user():
+    auth_token_from_cookie = request.cookies.get("auth-token")
+    hashed_of_above_token = hashlib.sha256(auth_token_from_cookie.encode()).hexdigest()
+    stored_hash = registered_users.find_one({"auth-token": hashed_of_above_token})
+    user = stored_hash["username"]
+    return user
+
 @app.route('/login-request', methods=['POST'])
 def loginRequest():
     username = request.form["username"]
@@ -115,10 +124,11 @@ def loginRequest():
         user_data = registered_users.find_one({'username': username})
         if user_data and verify_password(password, user_data['password_hash']):
             # authtoken = hash_function(user_data['username'])
-            authtoken = hashlib.sha256(user_data['username'].encode()).hexdigest()
+            random_string = ''.join(random.choices(string.ascii_letters, k=25))
+            authtoken = hashlib.sha256(random_string.encode()).hexdigest()
             registered_users.update_one({'username': username}, {'$set': {'auth-token': authtoken}})
             response = make_response(redirect('/'))
-            response.set_cookie('auth-token', authtoken, httponly=True, max_age=3600)
+            response.set_cookie('auth-token', random_string, httponly=True, max_age=3600)
             return response
 
 
@@ -161,8 +171,9 @@ def submit_quiz():
     if token is None or token == 'unauth':
         response = "Unauthenticated"
         return json.dumps(response)
-    
-    user = registered_users.find_one({"auth-token": token})["username"]
+
+    user = get_user()
+    # user = registered_users.find_one({"auth-token": token})["username"]
     if user is None:
         response = "Unauthenticated"
         return json.dumps(response)
@@ -198,12 +209,12 @@ def submit_quiz():
         "username": user
     }
 
-    if post["image"] != None:
+    if post.get("image") != None:
         print("Found Image!", flush=True)
-        quiz["image"] = "images/" + post["title"] + '.jpg'
+        quiz["image"] = "images/" + post["title"].replace('?', '') + '.jpg'
         the_image = post["image"].split(',')[1]
         image_as_bytes = base64.b64decode(the_image)
-        file = open('./static/uploaded-images/' + post["title"] + '.jpg', 'wb')
+        file = open('./static/uploaded-images/' + post["title"].replace('?', '') + '.jpg', 'wb')
         file.write(image_as_bytes)
         file.close()
     
@@ -220,8 +231,9 @@ def answer_quiz():
     if token is None or token == 'unauth':
         response = "Unauthenticated"
         return json.dumps(response)
-    
-    username = registered_users.find_one({"auth-token": token})["username"]
+
+    username = get_user()
+    # username = registered_users.find_one({"auth-token": token})["username"]
     if username is None:
         response = "Unauthenticated"
         return json.dumps(response)
