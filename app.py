@@ -77,6 +77,11 @@ def handle_connect():
     if url is not None:
         session['url'] = url
     print(f"Client connected with url {url}")
+    if url in timers:
+        remaining_time = timers[url]
+
+        # Emit the remaining time to the client
+        emit('timer', {'url': url, 'data': remaining_time})
 
 @app.route('/start-quiz', methods=['POST'])
 def start_quiz():
