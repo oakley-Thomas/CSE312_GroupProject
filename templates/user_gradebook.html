@@ -6,7 +6,7 @@
     <title>User Grades</title>
 </head>
 <body>
-    <h1>{{ user.username }}'s Grades</h1>
+    <h1>Your Posted Questions:</h1>
     <table border="1">
         <thead>
             <tr>
@@ -14,12 +14,10 @@
                 <th>Score </th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>{{ grade.question.text }}</td>
-                <td>{{ grade.score }}/{{ grade.max_points }}</td>
-            </tr>
+        <tbody id="tableNum">
         </tbody>
     </table>
+    <button onclick="window.location.href='/';">Back to Homepage</button>
+    <script src="../static/js/gradebook.js"></script>
 </body>
 </html>
