@@ -31,7 +31,7 @@
     </div>
 
     <script>
-        var socket = io.connect('ws://' + window.location.host + '/websocket', { 
+        var socket = io.connect('http://localhost:8080', { 
             transports: ['websocket'],
             query: { url: window.location.href }  // Send the URL of the page
         });
