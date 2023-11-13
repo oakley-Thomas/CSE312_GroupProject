@@ -166,6 +166,14 @@ def clear_quizzes():
     jsonResponse = json.dumps("Cleared Database")
     return jsonResponse
 
+def get_the_grade(hashed_value):
+    if bcrypt.checkpw(b'0', hashed_value):
+        return '0'
+    elif bcrypt.checkpw(b'1', hashed_value):
+        return '1'
+    elif bcrypt.checkpw(b'Not Answered (Grade = 0)', hashed_value):
+        return 'Not Answered (Grade = 0)'
+
 @app.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
     token = request.cookies.get("auth-token") 
@@ -218,11 +226,52 @@ def submit_quiz():
         file = open('./static/uploaded-images/' + post["title"].replace('?', '') + '.jpg', 'wb')
         file.write(image_as_bytes)
         file.close()
-    
+
+    new_quiz = {}
+    new_quiz["option_chosen"] = ""
+    hashed_grade = bcrypt.hashpw(b'Not Answered (Grade = 0)', bcrypt.gensalt())
+    new_quiz["grade"] = hashed_grade
+    for users in list(registered_users.find()):
+        if users["username"] == user:
+            pass
+        else:
+            if users.get("quizzes_list") == None:
+                quiz_to_insert = {quiz["title"]: new_quiz}
+                registered_users.update_one({"username": users["username"]}, {"$set": {"quizzes_list": quiz_to_insert}})
+            else:
+                previous_quizzes = users["quizzes_list"]
+                previous_quizzes[quiz["title"]] = new_quiz
+                registered_users.update_one({"username": users["username"]}, {"$set": {"quizzes_list": previous_quizzes}})
+
     quiz_collection.insert_one(quiz)
 
     response = "OK"
     return json.dumps(response)
+
+def grade_quiz(post):
+    username = get_user()
+    user = registered_users.find_one({"username": username})
+
+    question = post["id"]
+    answer_given = post["answer"]
+    quiz = quiz_collection.find_one({"title": question})
+    correct_answer = quiz["answer"]
+
+    if user["quizzes_list"].get(question) == None:
+        return
+
+    if answer_given == correct_answer:
+        quizzes_updated = user["quizzes_list"]
+        quizzes_updated[question]["option_chosen"] = answer_given
+        quizzes_updated[question]["grade"] = bcrypt.hashpw(b'1', bcrypt.gensalt())
+        registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
+        return
+    else:
+        quizzes_updated = user["quizzes_list"]
+        quizzes_updated[question]["option_chosen"] = answer_given
+        quizzes_updated[question]["grade"] = bcrypt.hashpw(b'0', bcrypt.gensalt())
+        registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
+        return
 
 @app.route('/answer-quiz', methods=['POST'])
 def answer_quiz():
@@ -239,6 +288,7 @@ def answer_quiz():
         response = "Unauthenticated"
         return json.dumps(response)
     else:
+        grade_quiz(post)
         jsonResponse = json.dumps("OK")
         return jsonResponse
 
