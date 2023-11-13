@@ -13,7 +13,7 @@
     <div classname = quizInfo>
         <form id= {{quizTitle}}>
             <h2> {{ quizCategory }} </h2>
-            <img src={{image}} class='postImage'>
+            <img src="{{ image | url_decode }}">
             <h3> {{ quizTitle }} </h2>
             {% for key, value in quizChoices.items() %}
                 <input type='radio' id={{key}} name='user-answer' value={{value}}></input>
@@ -21,7 +21,7 @@
             {% endfor %}
             <input type='button' value='Answer' onclick='answerQuiz(this.form)'>
             <br>
-            <div> Time Remaining: {{ timeRemaining }}</div>
+            <div id="timer">Time: 00:00</div>
             <div>Posted by: {{ postOwner }}</div>
         </form>
         <h2 id="responseMessage"></h2>
@@ -41,17 +41,6 @@
             }
         });
 
-        $('#start-quiz').click(function() {
-            $.ajax({
-                url: 'http://localhost:8080/start-quiz',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ url: window.location.href, duration: 24 }),  // Send the URL of the page
-                success: function() {
-                    console.log('Quiz started')
-                }
-            });
-        });
     </script>
 </body>
 </html>
