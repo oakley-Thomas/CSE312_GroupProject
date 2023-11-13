@@ -1,6 +1,6 @@
 function answerQuiz(form) {
     var selectedRadioButton = form.querySelector("input[name='user-answer']:checked");
-    var quizID = form.id
+    var quizID = encodeURI(form.id)
     if (selectedRadioButton){
         const post = { id: quizID, answer: selectedRadioButton.id};
         axios.post('/answer-quiz', post)
@@ -19,5 +19,8 @@ function handleSubmission(response)
     }
     else if (response.data == "Unauthenticated"){
         document.getElementById("responseMessage").innerHTML = '<h1>Sorry, log in to answer this quiz!</h1>'
+    }
+    else if (response.data == "Owner"){
+        document.getElementById("responseMessage").innerHTML = '<h1>Sorry, you can not answer your own quiz!</h1>'
     }
 }
