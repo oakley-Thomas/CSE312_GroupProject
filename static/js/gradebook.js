@@ -1,28 +1,36 @@
 
 function update() {
+
+
     const request = new XMLHttpRequest();
+
     request.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
             clear();
-            const grades = JSON.parse(this.response);
-            for (const grade of grades) {
-                addGrade(grade);
+            const dataSet = JSON.parse(this.responseText);
+            for (const data of dataSet) {
+                addGrade(data);
             }
         }
     };
+
     request.open("GET", "/user_grades");
     request.send();
+
 }
 
-function addGrade(grade) {
+function addGrade(data) {
     const tableNum = document.getElementById("tableNum");
+    tableNum.innerHTML += gradeHTML(data);
+}
 
-    const row = tableNum.insertRow();
-    const questionCell = row.insertCell(0);
-    const scoreCell = row.insertCell(1);
-
-    questionCell.textContent = grade.question.text;
-scoreCell.textContent = `${grade.score}/${grade.max_points}`;
+function gradeHTML(data) {
+    const question = data.question;
+    const grade = data.grade;
+    return `<tr>
+                <td>${question}</td>
+                <td>${grade}</td>
+            </tr>`;
 }
 
 function clear() {
@@ -30,6 +38,4 @@ function clear() {
     tableNum.innerHTML = "";
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    update();
-});
+document.addEventListener("DOMContentLoaded", update);
