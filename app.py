@@ -266,17 +266,20 @@ def grade_quiz(post):
     if user["quizzes_list"].get(question) == None:
         return
 
-    if answer_given == correct_answer:
-        quizzes_updated = user["quizzes_list"]
-        quizzes_updated[question]["option_chosen"] = answer_given
-        quizzes_updated[question]["grade"] = bcrypt.hashpw(b'1', bcrypt.gensalt())
-        registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
-        return
+    quizzes_updated = user["quizzes_list"]
+
+    if quizzes_updated[question]["option_chosen"] == "":
+        if answer_given == correct_answer:
+            quizzes_updated[question]["option_chosen"] = answer_given
+            quizzes_updated[question]["grade"] = bcrypt.hashpw(b'1', bcrypt.gensalt())
+            registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
+            return
+        else:
+            quizzes_updated[question]["option_chosen"] = answer_given
+            quizzes_updated[question]["grade"] = bcrypt.hashpw(b'0', bcrypt.gensalt())
+            registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
+            return
     else:
-        quizzes_updated = user["quizzes_list"]
-        quizzes_updated[question]["option_chosen"] = answer_given
-        quizzes_updated[question]["grade"] = bcrypt.hashpw(b'0', bcrypt.gensalt())
-        registered_users.update_one({"username": user["username"]}, {"$set": {"quizzes_list": quizzes_updated}})
         return
 
 @app.route('/answer-quiz', methods=['POST'])
