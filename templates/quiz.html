@@ -13,7 +13,10 @@
     <div classname = quizInfo>
         <form id="{{quizTitle}}">
             <h2> {{ quizCategory }} </h2>
-            <img src="{{ image | url_decode }}">
+            {% if user_authenticated %}
+                <img src="{{ image | url_decode }}">
+            {% endif %}
+            
             <h3> {{ quizTitle }} </h2>
             {% for key, value in quizChoices.items() %}
                 <input type='radio' id={{key}} name='user-answer' value={{value}}></input>
