@@ -18,6 +18,11 @@ import hashlib
 import time
 import base64
 import string, random
+from flask import Flask, jsonify, request, make_response
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from datetime import datetime, timedelta
+from werkzeug.wrappers import Response
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -30,6 +35,7 @@ registered_users = db["users"]
 posts_collection = db["posts"]
 quiz_collection = db["quizzes"]
 timers = {}
+blockedIp = {}
 
 
 # @app.route('/', methods=['POST'])
@@ -37,6 +43,30 @@ timers = {}
 #     data = request.json
 #     registered_users.insert_one(data)
 #     return
+
+wsgiApp = app.wsgi_app
+
+def checkBlock(environ, start_response):
+    ip = environ['REMOTE_ADDR']
+    if ip in blockedIp:
+        block_until = blockedIp[ip]
+        if datetime.now() < block_until:
+            response = Response('Too many requests. Please slow down.', 429)
+            return response(environ, start_response)
+        else:
+            del blockedIp[ip]
+    return wsgiApp(environ, start_response)
+
+app.wsgi_app = checkBlock
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["50 per 10 second"])
+limiter.init_app(app)
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    ip = get_remote_address()
+    blockedIp[ip] = datetime.now() + timedelta(seconds=30)
+    return make_response(jsonify(error="Too many requests. Please slow down."), 429)
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
