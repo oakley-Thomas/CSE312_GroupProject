@@ -11,3 +11,4 @@ werkzeug==2.3.7
 zipp==3.17.0
 bcrypt
 pymongo~=4.5.0
+Flask-Limiter
