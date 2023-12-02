@@ -26,7 +26,7 @@ from werkzeug.wrappers import Response
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None)
 socketio = SocketIO(app, cors_allowed_origins="*", transports='websocket')
 
 client = MongoClient("mongodb://mongo:27017/")
@@ -67,6 +67,11 @@ def ratelimit_handler(e):
     ip = get_remote_address()
     blockedIp[ip] = datetime.now() + timedelta(seconds=30)
     return make_response(jsonify(error="Too many requests. Please slow down."), 429)
+
+@app.route('/static/<path:path>')
+@limiter.limit("50 per 10 second")
+def send_static_file(path):
+    return send_from_directory('static', path)
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
