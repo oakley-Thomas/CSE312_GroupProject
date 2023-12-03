@@ -482,6 +482,10 @@ def registration():
 
 @app.route('/reg-request', methods = ['POST'])
 def regRequest():
+    request.form["username"] = html.escape(request.form["username"])
+    request.form["password"] = html.escape(request.form["password"])
+    request.form["password-confirm"] = html.escape(request.form["password-confirm"])
+
     username = request.form["username"]
     password = request.form["password"]
     passConf = request.form["password-confirm"]
