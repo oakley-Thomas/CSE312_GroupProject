@@ -12,3 +12,8 @@ zipp==3.17.0
 bcrypt
 pymongo~=4.5.0
 Flask-Limiter
+google
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
