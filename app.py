@@ -517,9 +517,9 @@ def registration():
 
 @app.route('/reg-request', methods = ['POST'])
 def regRequest():
-    username = request.form["username"]
-    password = request.form["password"]
-    passConf = request.form["password-confirm"]
+    username = html.escape(request.form["username"])
+    password = html.escape(request.form["password"])
+    passConf = html.escape(request.form["password-confirm"]) 
 
     if password != passConf:
         print("Error, Please Try again", flush=True)
