@@ -484,7 +484,7 @@ def registration():
 def regRequest():
     username = html.escape(request.form["username"])
     password = html.escape(request.form["password"])
-    passConf = html.escape(request.form["password-confirm"])
+    passConf = html.escape(request.form["password-confirm"]) 
 
     if password != passConf:
         print("Error, Please Try again", flush=True)
