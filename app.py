@@ -23,6 +23,12 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta
 from werkzeug.wrappers import Response
+from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+import pickle
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # starter code found here: https://blog.logrocket.com/build-deploy-flask-app-using-docker/
 # directs '/' requests to index.html
@@ -72,6 +78,64 @@ def ratelimit_handler(e):
 @limiter.limit("50 per 10 second")
 def send_static_file(path):
     return send_from_directory('static', path)
+
+def gmail_authenticate():
+    SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+    creds = None
+
+    if os.path.exists("token.pickle"):
+        with open("token.pickle", "rb") as token:
+            creds = pickle.load(token)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open("token.pickle", "wb") as token:
+            pickle.dump(creds, token)
+    return build('gmail', 'v1', credentials=creds)
+
+
+def build_message(destination, obj, body):
+    our_email = 'spiderwebquizzes@gmail.com'
+
+    message = MIMEMultipart()
+    message['to'] = destination
+    # message['from'] = our_email
+    message['subject'] = obj
+    message.attach(MIMEText(body))
+
+    return {'raw': base64.urlsafe_b64encode(message.as_bytes()).decode()}
+
+def send_message(service, destination, obj, body):
+    return service.users().messages().send(
+      userId="me",
+      body=build_message(destination, obj, body)
+    ).execute()
+
+def gmail_send_message(user):
+    service = gmail_authenticate()
+
+    random_string_with_80_bits_of_entropy = ''.join(random.choices(string.ascii_letters + string.digits, k=50))  # hashlib.sha256()
+
+    body = "This is a verification email.\n\nClick on this link to verify your email: http://www.spiderwebquizzes.me/verifyemail/" + random_string_with_80_bits_of_entropy
+
+    send_message(service, user, "Verify your email", body)
+
+    return
+
+@app.route('/verifyemail/<id>')
+def verified():
+    user = get_user()
+    registered_users.update_one({"username": user}, {"$set": {"email_verified": "true"}})
+    return redirect('/', 302)
+
+@app.route('/verify_email', methods=['POST'])
+def send_verification_link():
+    user = get_user()
+    gmail_send_message(user)
+    return
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
@@ -531,6 +595,7 @@ def regRequest():
     registered_users.insert_one({
         "username": username,
         "password_hash": hashed_pw,
+        "email_verified": "false"
     })
 
     return render_template('login.html')
