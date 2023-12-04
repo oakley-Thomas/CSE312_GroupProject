@@ -20,6 +20,8 @@ function check_for_token(){
             b1.action = "/login";
             b1_text.innerHTML = "Renew Session";
         }
+    }
+
 
 function verifyEmail() {
     fetch('/verify_email', {
@@ -39,4 +41,3 @@ function verifyEmail() {
     })
     .catch(error => console.error('Error Verifying Email:', error));
 }
-    }
