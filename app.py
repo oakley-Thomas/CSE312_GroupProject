@@ -36,6 +36,7 @@ app = Flask(__name__, static_folder=None)
 socketio = SocketIO(app, cors_allowed_origins="*", transports='websocket')
 
 client = MongoClient("mongodb://mongo:27017/")
+
 db = client["CSE312ProjectDB"]
 registered_users = db["users"]
 posts_collection = db["posts"]
@@ -133,9 +134,13 @@ def verified():
 
 @app.route('/verify_email', methods=['POST'])
 def send_verification_link():
-    user = get_user()
-    gmail_send_message(user)
-    return
+    print("The call is made correctly")
+    # user = get_user()
+    # gmail_send_message(user)
+    payload = {
+        "email_verified": 'true'
+    }
+    return payload
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
