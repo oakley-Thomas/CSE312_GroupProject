@@ -36,7 +36,6 @@ app = Flask(__name__, static_folder=None)
 socketio = SocketIO(app, cors_allowed_origins="*", transports='websocket')
 
 client = MongoClient("mongodb://mongo:27017/")
-
 db = client["CSE312ProjectDB"]
 registered_users = db["users"]
 posts_collection = db["posts"]
@@ -134,13 +133,10 @@ def verified():
 
 @app.route('/verify_email', methods=['POST'])
 def send_verification_link():
-    #print("The call is made correctly")
     user = get_user()
     gmail_send_message(user)
-    payload = {
-        "email_verified": 'true'
-    }
-    return payload
+    return "Success", 200
+
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
@@ -159,21 +155,42 @@ def countdown_timer(url, duration):
         timers[url] = timer  # Update the timer for this quiz
         socketio.emit('timer', {'url': url, 'data': timer})
 
+# @app.route('/')
+# def home():
+#     if request.cookies != None and request.cookies.get("auth-token") != None:
+#         token = request.cookies.get("auth-token")
+#         user = get_user()
+#
+#         # user = db["users"].find_one({"auth-token": token})
+#         response = make_response(render_template('index.html'))
+#         if user is None:
+#             response.set_cookie('username', "inv-token")
+#         if user is not None:
+#             nametest = user # user["username"]
+#             response.set_cookie('username', nametest)
+#         return response
+#     return render_template('index.html')
+
 @app.route('/')
 def home():
+    show_verify_button = True
     if request.cookies != None and request.cookies.get("auth-token") != None:
         token = request.cookies.get("auth-token")
         user = get_user()
+        user_data = registered_users.find_one({'username': user})
+        user_verified_email = user_data["email_verified"]
 
         # user = db["users"].find_one({"auth-token": token})
-        response = make_response(render_template('index.html'))
+        show_verify_button = user_verified_email != "true"
+        response = make_response(render_template('index.html',show_verify_button=show_verify_button))
         if user is None:
             response.set_cookie('username', "inv-token")
         if user is not None:
             nametest = user # user["username"]
             response.set_cookie('username', nametest)
         return response
-    return render_template('index.html')
+    return render_template('index.html',show_verify_button=show_verify_button)
+
 
 @socketio.on('connect')
 def handle_connect():

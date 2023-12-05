@@ -21,23 +21,12 @@ function check_for_token(){
             b1_text.innerHTML = "Renew Session";
         }
     }
-
-
 function verifyEmail() {
     fetch('/verify_email', {
         method: 'POST',
     })
-    .then(response => response.json())
-    .then(data => {
-        const verificationStatus = document.getElementById('verificationStatus');
-        const verifyEmailButton = document.getElementById('verifyEmailButton');
-
-        if (data && data.email_verified === 'true') {
-            verificationStatus.innerText = 'Email verified';
-            verifyEmailButton.style.display = 'none';
-        } else {
-            verificationStatus.innerText = 'Email not verified';
-        }
+    .then(() => {
+        console.log('Verification email sent.');
     })
     .catch(error => console.error('Error Verifying Email:', error));
 }
