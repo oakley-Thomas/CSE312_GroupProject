@@ -134,9 +134,9 @@ def verified():
 
 @app.route('/verify_email', methods=['POST'])
 def send_verification_link():
-    print("The call is made correctly")
-    # user = get_user()
-    # gmail_send_message(user)
+    #print("The call is made correctly")
+    user = get_user()
+    gmail_send_message(user)
     payload = {
         "email_verified": 'true'
     }
