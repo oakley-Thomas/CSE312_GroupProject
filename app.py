@@ -119,14 +119,15 @@ def gmail_send_message(user):
 
     random_string_with_80_bits_of_entropy = ''.join(random.choices(string.ascii_letters + string.digits, k=50))  # hashlib.sha256()
 
-    body = "This is a verification email.\n\nClick on this link to verify your email: http://www.spiderwebquizzes.me/verifyemail/" + random_string_with_80_bits_of_entropy
+    body = "This is a verification email.\n\nClick on this link to verify your email: http://159.65.240.148:8080/verifyemail/" + random_string_with_80_bits_of_entropy
 
     send_message(service, user, "Verify your email", body)
 
     return
 
 @app.route('/verifyemail/<id>')
-def verified():
+def verified(id):
+    id = id
     user = get_user()
     registered_users.update_one({"username": user}, {"$set": {"email_verified": "true"}})
     return redirect('/', 302)
@@ -135,7 +136,8 @@ def verified():
 def send_verification_link():
     user = get_user()
     gmail_send_message(user)
-    return
+    return "Success", 200
+
 
 def hash_function(stringToHash):
     return bcrypt.hashpw(stringToHash.encode('utf-8'), bcrypt.gensalt())
@@ -154,21 +156,42 @@ def countdown_timer(url, duration):
         timers[url] = timer  # Update the timer for this quiz
         socketio.emit('timer', {'url': url, 'data': timer})
 
+# @app.route('/')
+# def home():
+#     if request.cookies != None and request.cookies.get("auth-token") != None:
+#         token = request.cookies.get("auth-token")
+#         user = get_user()
+#
+#         # user = db["users"].find_one({"auth-token": token})
+#         response = make_response(render_template('index.html'))
+#         if user is None:
+#             response.set_cookie('username', "inv-token")
+#         if user is not None:
+#             nametest = user # user["username"]
+#             response.set_cookie('username', nametest)
+#         return response
+#     return render_template('index.html')
+
 @app.route('/')
 def home():
+    show_verify_button = True
     if request.cookies != None and request.cookies.get("auth-token") != None:
         token = request.cookies.get("auth-token")
         user = get_user()
+        user_data = registered_users.find_one({'username': user})
+        user_verified_email = user_data["email_verified"]
 
         # user = db["users"].find_one({"auth-token": token})
-        response = make_response(render_template('index.html'))
+        show_verify_button = user_verified_email != "true"
+        response = make_response(render_template('index.html',show_verify_button=show_verify_button))
         if user is None:
             response.set_cookie('username', "inv-token")
         if user is not None:
             nametest = user # user["username"]
             response.set_cookie('username', nametest)
         return response
-    return render_template('index.html')
+    return render_template('index.html',show_verify_button=show_verify_button)
+
 
 @socketio.on('connect')
 def handle_connect():
