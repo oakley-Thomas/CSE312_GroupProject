@@ -119,7 +119,7 @@ def gmail_send_message(user):
 
     random_string_with_80_bits_of_entropy = ''.join(random.choices(string.ascii_letters + string.digits, k=50))  # hashlib.sha256()
 
-    body = "This is a verification email.\n\nClick on this link to verify your email: http://137.184.237.87:8080/verifyemail/" + random_string_with_80_bits_of_entropy
+    body = "This is a verification email.\n\nClick on this link to verify your email: http://159.65.240.148:8080/verifyemail/" + random_string_with_80_bits_of_entropy
 
     send_message(service, user, "Verify your email", body)
 
