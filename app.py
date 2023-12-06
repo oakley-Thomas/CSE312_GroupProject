@@ -126,7 +126,8 @@ def gmail_send_message(user):
     return
 
 @app.route('/verifyemail/<id>')
-def verified():
+def verified(id):
+    id = id
     user = get_user()
     registered_users.update_one({"username": user}, {"$set": {"email_verified": "true"}})
     return redirect('/', 302)
