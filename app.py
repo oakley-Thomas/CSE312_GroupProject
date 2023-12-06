@@ -68,6 +68,12 @@ app.wsgi_app = checkBlock
 limiter = Limiter(key_func=get_remote_address, default_limits=["50 per 10 second"])
 limiter.init_app(app)
 
+def get_remote_address():
+    if 'X-Forwarded-For' in request.headers:
+        return request.headers.getlist("X-Forwarded-For")[-1]
+    else:
+        return request.remote_addr
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
     ip = get_remote_address()
